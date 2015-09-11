@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
+#define M_PI 3.14159265358979323846
+
 using namespace std;
 
 int ord       ( int * arr, int size, int min,     int max,     int step = 0 );
@@ -30,13 +32,13 @@ typedef int (*int_seq)( int*, int, int, int, int );
 typedef int (*double_seq)( double*, int, double, double, int);
 
 enum fn_names { ORD, RORD, SAW, SIN, STEP, QUAZI, RAND };
-const char * fn_str[] = { "ord", "rord", "saw", "sin", "step", "rand" };
+const char * fn_str[] = { "ord", "rord", "saw", "sin", "step", "quazi", "rand" };
 int_seq iseq_arr[7] = { ord, rord, saw, sinusoid, 
 	stepped, quazi_ord, rand_seq };
 double_seq dseq_arr[7] = { ord, rord, saw, sinusoid, 
 	stepped, quazi_ord, rand_seq };
 
-#define SIZE 113 
+#define SIZE 62 
 
 int main()
 {
@@ -44,11 +46,11 @@ int main()
 	double darr[SIZE];
 	srand( time( 0 ) );
 	
-	if( sinusoid( darr, SIZE, 19, 129, 30 ) )
-		show_arr( darr, SIZE );
+	if( quazi_ord( iarr, SIZE, 13, 50 ) )
+		show_arr( iarr, SIZE );
 	else
 		cout << "error\n";
-		
+	
 	return 0;
 }
 
@@ -114,11 +116,24 @@ int sinusoid( int * arr, int size, int min, int max, int step )
 
 int stepped( int * arr, int size, int min, int max, int step )
 {
+	if( !arr || size <= 0 || min > max || !step )
+		return 0;
+	
 	
 	return 1;
 }
 int quazi_ord( int * arr, int size, int min, int max, int step )
 {
+	if( !arr || size <= 0 || min > max )
+		return 0;
+	
+	for( int i = 0; i < size; ++i ) {
+		int deviant = rand() % (max-min)/10;
+		bool apply_deviant = rand() % 2;
+		int sign = (rand() % 2) ? 1 : -1;
+		arr[i] = min + i * (double)(max - min) / (size - 1) + 0.5 
+			+ sign * apply_deviant * deviant;
+	}
 	return 1;
 }
 int rand_seq( int * arr, int size, int min, int max, int step )
@@ -203,6 +218,15 @@ int stepped( double * arr, int size, double min, double max, int step )
 }
 int quazi_ord( double * arr, int size, double min, double max, int step )
 {
+	if( !arr || size <= 0 || min > max || !step )
+		return 0;
+	
+	for( int i = 0; i < size; ++i ) {
+		int deviant = rand() % (int)(max-min)/10;
+		bool apply_deviant = rand() % 2;
+		arr[i] = min + i * (max - min) / (size - 1) 
+			+ apply_deviant * deviant;
+	}
 	return 1;
 }
 int rand_seq( double * arr, int size, double min, double max, int step )
