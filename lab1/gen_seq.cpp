@@ -38,16 +38,16 @@ int_seq iseq_arr[7] = { ord, rord, saw, sinusoid,
 double_seq dseq_arr[7] = { ord, rord, saw, sinusoid, 
 	stepped, quazi_ord, rand_seq };
 
-#define SIZE 62 
+#define SIZE 113
 
 int main()
 {
-	int iarr[SIZE];
-	double darr[SIZE];
+	int iarr[SIZE] = { 0 };
+	double darr[SIZE] = { 0 };
 	srand( time( 0 ) );
 	
-	if( quazi_ord( iarr, SIZE, 13, 50 ) )
-		show_arr( iarr, SIZE );
+	if( stepped( darr, SIZE, 3, 203, 11 ) )
+		show_arr( darr, SIZE );
 	else
 		cout << "error\n";
 	
@@ -119,6 +119,23 @@ int stepped( int * arr, int size, int min, int max, int step )
 	if( !arr || size <= 0 || min > max || !step )
 		return 0;
 	
+	int intervals = size / step + (size%step ? 1 : 0);
+	double interval_range = (double)(max - min) / intervals;
+	int deviation_limit = interval_range / 5.0 + 0.5;
+	int median = 0;
+	int i = 0;
+	for( ; i < intervals - 1; ++i ) {
+		median = min + i*interval_range + interval_range / 2.0 + 0.5;
+		for( int j = 0; j < step; ++j ) {
+			arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
+				* rand()%deviation_limit;
+		}
+	}
+	median = min + i*interval_range + interval_range / 2.0 + 0.5;
+	for( int j = 0; j < size - i*step; ++j ) {
+		arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
+			* rand()%deviation_limit;
+	}
 	
 	return 1;
 }
@@ -128,11 +145,13 @@ int quazi_ord( int * arr, int size, int min, int max, int step )
 		return 0;
 	
 	for( int i = 0; i < size; ++i ) {
-		int deviant = rand() % (max-min)/10;
+		arr[i] = min + i * (double)(max - min) / (size - 1) + 0.5; 
 		bool apply_deviant = rand() % 2;
-		int sign = (rand() % 2) ? 1 : -1;
-		arr[i] = min + i * (double)(max - min) / (size - 1) + 0.5 
-			+ sign * apply_deviant * deviant;
+		if( apply_deviant ) {
+			int deviant = rand() % (max-min)/10;
+			int sign = (rand() % 2) ? 1 : -1;
+			arr[i] += sign * apply_deviant * deviant;
+		}
 	}
 	return 1;
 }
@@ -214,6 +233,27 @@ int sinusoid( double * arr, int size, double min, double max, int step )
 }
 int stepped( double * arr, int size, double min, double max, int step )
 {
+	if( !arr || size <= 0 || min > max || !step )
+		return 0;
+	
+	int intervals = size / step + (size%step ? 1 : 0);
+	double interval_range = (max - min) / intervals;
+	int deviation_limit = interval_range / 5.0 + 0.5;
+	double median = 0;
+	int i = 0;
+	for( ; i < intervals - 1; ++i ) {
+		median = min + i*interval_range + interval_range / 2.0;
+		for( int j = 0; j < step; ++j ) {
+			arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
+				* rand()%deviation_limit;
+		}
+	}
+	median = min + i*interval_range + interval_range / 2.0;
+	for( int j = 0; j < size - i*step; ++j ) {
+		arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
+			* rand()%deviation_limit;
+	}
+	
 	return 1;
 }
 int quazi_ord( double * arr, int size, double min, double max, int step )
@@ -222,15 +262,24 @@ int quazi_ord( double * arr, int size, double min, double max, int step )
 		return 0;
 	
 	for( int i = 0; i < size; ++i ) {
-		int deviant = rand() % (int)(max-min)/10;
+		arr[i] = min + i * (max - min) / (size - 1) + 0.5; 
 		bool apply_deviant = rand() % 2;
-		arr[i] = min + i * (max - min) / (size - 1) 
-			+ apply_deviant * deviant;
+		if( apply_deviant ) {
+			int deviant = rand() % (int)(max-min)/10;
+			int sign = (rand() % 2) ? 1 : -1;
+			arr[i] += sign * apply_deviant * deviant;
+		}
 	}
 	return 1;
 }
 int rand_seq( double * arr, int size, double min, double max, int step )
 {
+	if( !arr || size <=0 || min > max )
+		return 0;
+	for( int i = 0; i < size; i++ ) {
+		arr[i] = min + (max - min) * rand() / RAND_MAX;
+	}
+
 	return 1;
 }
 
