@@ -53,7 +53,7 @@ int main()
 	clock_t time2  = 0;
 	clock_t total1 = 0;
 	clock_t total2 = 0;
-	int size       = 0;
+	int size      = 0;
 	cout << "***************************\n";
 	cout << "Testing functions for INTS:\n";
 	total1 = clock();
@@ -96,6 +96,9 @@ int main()
 	total2 = clock();
 	cout << "Total time: " 
 	     << (total2-total1)/CLOCKS_PER_SEC << "s\n";
+#ifdef _MSC_VER
+	getchar();
+#endif
 	return 0;
 }
 
