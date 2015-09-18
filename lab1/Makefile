@@ -1,8 +1,18 @@
-gen_seq: gen_seq.cpp
-	g++ -Wall -g gen_seq.cpp -o gen_seq
+CXX=g++
+CFLAGS=-Wall -g
+OBJ=gen_seq.o sequence.o
 
-make_coords: make_coords.cpp
-	g++ -o make_coords make_coords.cpp
+gen_seq: $(OBJ)
+	$(CXX) -o gen_seq $(OBJ)
+
+gen_seq.o: gen_seq.cpp
+	$(CXX) $(CFLAGS) -c $*.cpp
+
+sequence.o: sequence.cpp sequence.hpp
+	$(CXX) $(CFLAGS) -c $*.cpp
+
+make_coords: $@.cpp
+	$(CXX) $@.cpp -o $@
 
 clean:
-	rm make_coords gen_seq
+	rm make_coords gen_seq *.o
