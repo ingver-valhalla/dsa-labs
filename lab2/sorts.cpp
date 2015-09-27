@@ -53,6 +53,46 @@ int sort_insert_bin( int * arr, int size )
     return 1;
 }
 
+int RadixPartition0( int * arr, int low, int high, uint mask )
+{
+	int i = low - 1, j = high + 1;
+	for(;;) {
+		while( (!(mask & (uint)arr[++i])) && i < high );
+		while(   (mask & (uint)arr[--j])  && j > low  );
+		if( i >= j )
+			break;
+		swap(arr[i], arr[j]);
+	}
+	if( i == j && i == high ) ++i;
+	return i;
+}
+
+void MSRadix( int * arr, int low, int high, uint mask )
+{
+	int i;
+	if( mask > 0 && low < high ) {
+		i = RadixPartition0( arr, low, high, mask );
+		MSRadix( arr, low, i-1 , mask >> 1 );
+		MSRadix( arr, i  , high, mask >> 1 );
+	}
+}
+
+int MSD2( int * arr, int size )
+{
+	if( !arr || size <= 0 )
+		return 0;
+	int i; 
+	uint mask = 0;
+	for( i = 0; i < size; ++i )
+		mask |= (uint)arr[i];
+	for( i = 31; i >= 1; --i )
+		if( mask & (1 << i) )
+			break;
+
+	MSRadix( arr, 0, size-1, 1 << i );
+	return 1;
+}
+
 int is_sorted( int * arr, int size )
 {
     for( int i = 1; i < size; ++i )
@@ -69,6 +109,8 @@ using namespace std;
 int main( int argc, char ** argv )
 {
     int arr[SIZE] = { 0 };
+
+    cout << "\n*********************\n"; 
     if( !stepped( arr, SIZE, 7, 517, 11 ) ) {
         cout << "Error\n";
     }
@@ -100,6 +142,23 @@ int main( int argc, char ** argv )
         cout << "SUCCESS\n";
     else
         cout << "ARRAY IS UNSORTED\n";
+
+    cout << "\n*********************\n"; 
+    if( !stepped( arr, SIZE, 19, 213, 11 ) ) {
+        cout << "Error\n";
+    }
+    cout << "Generated sequence:\n";
+    show_arr( arr, SIZE );
+    if( !MSD2( arr, SIZE ) ) {
+        cout << "Failed sort\n";
+    }
+    cout << "\nSorted with MSD sort:\n";
+    show_arr( arr, SIZE );
+    if( is_sorted( arr, SIZE ) )
+        cout << "SUCCESS\n";
+    else
+        cout << "ARRAY IS UNSORTED\n";
+
     #ifdef _MSC_VER
     getchar();
     #endif
