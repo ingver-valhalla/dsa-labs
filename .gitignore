@@ -250,6 +250,7 @@ _Pvt_Extensions
 *.app
 gen_seq
 make_coords
+sorts
 
 # ignoring MSVC projects for testing on Win
 # suffixed with _sln
