@@ -32,7 +32,7 @@ int main()
 	total1 = clock();
 	for( int i = 0; i < 7; ++i ) {
 		for( int j = 0; j < 10; ++j ) {
-			size = (j+1) * 5 * 10e5;
+			size = (j+1) * 5 * 1e5;
 			iarr = new int[size];
 			time1 = clock();
 			iseq_arr[i]( iarr, size, imin, imax, 100 );
@@ -52,7 +52,7 @@ int main()
 	cout << "Testing functions for DOUBLES:\n";
 	for( int i = 0; i < 7; ++i ) {
 		for( int j = 0; j < 10; ++j ) {
-			size = (j+1) * 5 * 10e5;
+			size = (j+1) * 5 * 1e5;
 			darr = new double[size];
 			time1 = clock();
 			dseq_arr[i]( darr, size, dmin, dmax, 100 );
