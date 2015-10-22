@@ -175,7 +175,7 @@ void MSRadixG( Key * arr, int low, int high, Compare & cmp, short r, short word 
 }
 
 template <typename Compare>
-int sort_radix_msd( Key * arr, int size, Compare & cmp, int word )
+int sort_radix_msd( Key * arr, int size, Compare & cmp, short word )
 {
 	aux = new Key[size];
 	int type_size = sizeof( *arr ) * 8;
@@ -207,8 +207,8 @@ int is_sorted( Key * arr, int size )
 }
 
 template <typename Compare>
-double sort_time_test( int (*sort)( Key *, int, Compare&, int ),
-                       Key * arr, int size, Compare & cmp, int word = 0 )
+double sort_time_test( int (*sort)( Key *, int, Compare&, short ),
+                       Key * arr, int size, Compare & cmp, short word = 0 )
 {
 	clock_t clock1;
 	clock_t clock2;
@@ -234,7 +234,7 @@ double qsort_time_test( Key * arr, int size,
 	return 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC;
 }
 
-#define SIZE (int)100
+#define SIZE (int)1000
 
 int main( int argc, char ** argv )
 {
@@ -249,7 +249,7 @@ int main( int argc, char ** argv )
 	     << "ms"  << endl;
 	cout << "Comparisons: " << less.amount() << endl;
 	cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
-	show_arr( (int *)arr, SIZE );
+	//show_arr( (int *)arr, SIZE );
 	
 
 	/*
