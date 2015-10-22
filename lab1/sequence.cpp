@@ -73,7 +73,7 @@ int sinusoid( int * arr, int size, int min, int max, int step )
 
 int stepped( int * arr, int size, int min, int max, int step )
 {
-	if( !arr || size <= 0 || min > max || !step )
+	if( !arr || size <= 0 || min >= max || !step )
 		return 0;
 	
 	int intervals = size / step + (size%step ? 1 : 0);
@@ -85,20 +85,20 @@ int stepped( int * arr, int size, int min, int max, int step )
 		median = min + i*interval_range + interval_range / 2.0 + 0.5;
 		for( int j = 0; j < step; ++j ) {
 			arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
-				* rand()%deviation_limit;
+				* rand()%(deviation_limit + 1);
 		}
 	}
 	median = min + i*interval_range + interval_range / 2.0 + 0.5;
 	for( int j = 0; j < size - i*step; ++j ) {
 		arr[i*step + j] = median + ((rand()%2) ? 1 : -1) 
-			* rand()%deviation_limit;
+			* rand()%(deviation_limit + 1);
 	}
 	
 	return 1;
 }
 int quazi_ord( int * arr, int size, int min, int max, int step )
 {
-	if( !arr || size <= 0 || min > max )
+	if( !arr || size <= 0 || min >= max )
 		return 0;
 	
 	for( int i = 0; i < size; ++i ) {
