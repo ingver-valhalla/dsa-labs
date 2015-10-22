@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <cstdlib>
 #include <climits>
 #include <cfloat>
 #include "sequence.hpp"
@@ -16,10 +17,12 @@ double_seq dseq_arr[7] = { ord, rord, saw, sinusoid,
 
 int main()
 {
+	srand(time(0));
 	int    * iarr  = NULL;
 	double * darr  = NULL;
 	int imin       = 0;
-	int imax       = INT_MAX;
+	int imax       = 10000;
+	int step       = 10;
 	double dmin    = 0;
 	double dmax    = DBL_MAX;
 	clock_t time1  = 0;
@@ -35,7 +38,7 @@ int main()
 			size = (j+1) * 5 * 1e5;
 			iarr = new int[size];
 			time1 = clock();
-			iseq_arr[i]( iarr, size, imin, imax, 100 );
+			iseq_arr[i]( iarr, size, imin, imax, step );
 			time2 = clock();
 			delete[] iarr;
 
@@ -55,7 +58,7 @@ int main()
 			size = (j+1) * 5 * 1e5;
 			darr = new double[size];
 			time1 = clock();
-			dseq_arr[i]( darr, size, dmin, dmax, 100 );
+			dseq_arr[i]( darr, size, dmin, dmax, step );
 			time2 = clock();
 			delete[] darr;
 
