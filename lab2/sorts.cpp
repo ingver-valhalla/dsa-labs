@@ -2,67 +2,115 @@
 
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <cassert>
+#include <cstring>
+#include <climits>
+#include <unistd.h>
 #include "../lab1/sequence.hpp"
 
-typedef unsigned int uint;
 using namespace std;
 
-void swap( int & a, int & b )
-{
-	int t = a; a = b; b = t;
-}
+typedef unsigned int uint;
+typedef int Key;
 
-/* Insertion sort with sentinel */ 
-int sort_insert_sent( int *arr, int size )
+//==============================================================================
+// functors
+//==============================================================================
+class LessThan {
+	int n;
+public:
+	LessThan() : n(0) {};
+	void reset() { n = 0; }
+	int amount() { return n; }
+
+	template <typename T>
+	bool operator() ( const T * a, const T * b )
+	{
+		++n;
+		if( *a < *b )
+			return true;
+		return false;
+	}
+};
+
+class MoreThan {
+	int n;
+public:
+	MoreThan() : n(0) {};
+	void reset() { n = 0; }
+	int amount() { return n; }
+
+	template <typename T>
+	bool operator() ( const T * a, const T * b )
+	{
+		++n;
+		if( *a > *b )
+			return true;
+		return false;
+	}
+};
+//==============================================================================
+
+
+//==============================================================================
+// function for testing standard qsort
+//==============================================================================
+static int comps;
+int less_than( const void * a, const void * b )
+{
+	++comps;
+	if( *(Key*)a < *(Key*)b )
+		return 1;
+	return 0;
+}
+//==============================================================================
+
+
+//==============================================================================
+// Insertion sort with sentinel 
+//==============================================================================
+template <typename Compare>
+int sort_insert_sent( Key * arr, int size, Compare & cmp, short word = 0 )
 {
 	if( !arr || size <= 0 ) 
 		return 0;
-	int i, j, t;
-	int iters = 0;
+	int i, j;
+	Key t;
 	for( i = size - 1; i > 0; --i ) {
-		++iters;
-		if( arr[i-1] > arr[i] )
+		if( !cmp( &arr[i-1], &arr[i] ) )
 			swap( arr[i-1], arr[i] );
 	}
-	cout << "After 1st cycle: " << iters << endl;
 	for( i = 2; i < size; ++i ) {
 		t = arr[i];
 		for( j = i; t < arr[j-1]; --j ) {
-			++iters;
 			arr[j] = arr[j-1];
 		}
 		arr[j] = t;
 	}
-	cout << "Total: " << iters << endl;
+	cmp.amount();
 	return 1;
 }
+//==============================================================================
 
 
-/* Time complexity T(n) for insertion sort with sentinel */
-int tn_insert( int n )
-{
-	return (n-1) + (n-2)*(n-1)/2;
-}
-
-/* Sum of comparisons S(n) for insertion sort with sentinel */
-int sn_insert( int n )
-{
-	return (n-1) + (n-1)*n/2 - 1;	
-}
-
-/* Binary insertion sort */
-int sort_insert_bin( int * arr, int size )
+//==============================================================================
+// Binary insertion sort
+//==============================================================================
+template <typename Compare>
+int sort_insert_bin( Key * arr, int size, Compare & cmp, short word = 0 )
 {
 	if( !arr || size <= 0 )
 		return 0;
 	int i, j, low, high, pos;
-	int t;
+	Key t;
 	for( i = 1; i < size; ++i ) {
 		t = arr[i];
 		for( low = 0, high = i - 1, pos = (low + high) >> 1;
 		     low <= high; pos = (low + high) >> 1 )
 		{
-			if( t < arr[pos] )
+			if( cmp( &t, &arr[pos]) )
 				high = pos - 1;
 			else
 				low = pos + 1;
@@ -75,79 +123,81 @@ int sort_insert_bin( int * arr, int size )
 	
 	return 1;
 }
+//==============================================================================
 
-/* Time complexity T(n) for binary insertion sort */
-int tn_insert_bin( int n )
+
+//==============================================================================
+// Radix Sort (Most Significant Digit)
+//==============================================================================
+
+// Macros for extracting a digit from an integer
+#define digit(A,R,W) (((Key)A >> (R*W)) & ~(~0 << W))
+
+Key * aux = NULL;
+int recursion_depth = 0;
+int memory_cost = 0;
+
+template <typename Compare>
+void MSRadixG( Key * arr, int low, int high, Compare & cmp, short r, short word )
 {
-	int t = 0;
-	for( int i = 0; i < n; ++i ) {
-		t += log2( i + 1 );
+	++recursion_depth;
+	if( r < 0 ) 
+		return;
+	
+	if( high - low <= 10 ) { 
+		sort_insert_bin( arr+low, high-low+1, cmp );
+		return;
 	}
-	t += (n-1)*n/2;
-	return t;
-}
-
-/* Sum of comparisons S(n) for binary insertion sort */
-int sn_insert_bin( int n )
-{
-	int s = 0;
-	for( int i = 1; i < n; ++i ) {
-		s += log2( 2*i+1 );
+	
+	int arr_size = pow( 2, word ) + 1;
+	int * cnt = new int[arr_size]();
+	if( cnt == NULL ) {
+		cerr << "MSRadixG: Error while allocating memory" << endl;
+		exit( EXIT_FAILURE );
 	}
-	return s;
-}
+	memory_cost += arr_size + sizeof( int );
 
-int RadixPartition0( int * arr, int low, int high, uint mask )
-{
-	int i = low - 1, j = high + 1;
-	for(;;) {
-		while( (!(mask & (uint)arr[++i])) && i < high );
-		while(   (mask & (uint)arr[--j])  && j > low  );
-		if( i >= j )
-			break;
-		swap(arr[i], arr[j]);
-	}
-	if( i == j && i == high ) ++i;
-	return i;
-}
-
-void MSRadix( int * arr, int low, int high, uint mask )
-{
 	int i;
-	if( mask > 0 && low < high ) {
-		i = RadixPartition0( arr, low, high, mask );
-		MSRadix( arr, low, i-1 , mask >> 1 );
-		MSRadix( arr, i  , high, mask >> 1 );
-	}
+	for( i = low; i <= high; ++i ) 
+		cnt[digit(arr[i],r,word)+1]++;
+	for( i = 1; i < arr_size; i++ )
+		cnt[i] += cnt[i-1];
+	for( i = low; i <= high; ++i )
+		aux[cnt[digit(arr[i],r,word)]++] = arr[i];
+	for( i = low; i <= high; ++i )
+		arr[i] = aux[i-low];
+	MSRadixG( arr, low, low + cnt[0] - 1, cmp, r - 1, word );
+	for( i = 0; i < arr_size - 1; ++i )
+		MSRadixG( arr, low + cnt[i], low + cnt[i+1] - 1,
+		          cmp, r - 1, word );
+	delete[] cnt;
+	cnt = NULL;
 }
 
-int MSD2( int * arr, int size )
+template <typename Compare>
+int sort_radix_msd( Key * arr, int size, Compare & cmp, int word )
 {
-	if( !arr || size <= 0 )
+	aux = new Key[size];
+	int type_size = sizeof( *arr ) * 8;
+	double int_part;
+	double fract_part = modf( log2( word ), &int_part );
+	if( fract_part != 0 || word > type_size )
 		return 0;
-	int i; 
-	uint mask = 0;
-	for( i = 0; i < size; ++i )
-		mask |= (uint)arr[i];
-	for( i = 31; i >= 1; --i )
-		if( mask & (1 << i) )
-			break;
-
-	MSRadix( arr, 0, size-1, 1 << i );
+	MSRadixG( arr, 0, size - 1, cmp, type_size/word - 1, word );
+	delete[] aux;
+	aux = NULL;
+	cout << "Recursion depth = " << recursion_depth << endl;
+	cout << "Stack using for arrays: " 
+	     << (memory_cost > 1024 ? memory_cost / 1024 : memory_cost )
+	     << (memory_cost > 1024 ? "Mb" : "Kb") << endl;
+	recursion_depth = 0;
 	return 1;
 }
+//==============================================================================
 
-int tn_msd( int n )
-{
-	return 1;
-}
 
-int sn_msd( int n )
-{
-	return 1;
-}
-
-int is_sorted( int * arr, int size )
+template <typename Key>
+int is_sorted( Key * arr, int size )
 {
 	for( int i = 1; i < size; ++i )
 	if( arr[i-1] > arr[i] )
@@ -156,60 +206,61 @@ int is_sorted( int * arr, int size )
 	return 1;
 }
 
-#define SIZE 100
+template <typename Compare>
+double sort_time_test( int (*sort)( Key *, int, Compare&, int ),
+                       Key * arr, int size, Compare & cmp, int word = 0 )
+{
+	clock_t clock1;
+	clock_t clock2;
+
+	clock1 = clock();
+	assert( sort( arr, size, cmp, word ) );
+	clock2 = clock();
+	
+	return 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC;
+
+}
+
+double qsort_time_test( Key * arr, int size, 
+                        int (*cmp)( const void *, const void * ))
+{
+	clock_t clock1;
+	clock_t clock2;
+
+	clock1 = clock();
+	qsort( arr, size, sizeof(*arr), cmp );
+	clock2 = clock();
+	
+	return 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC;
+}
+
+#define SIZE (int)100
 
 int main( int argc, char ** argv )
 {
-	int arr[SIZE] = { 0 };
+	srand(time(0));
+	Key * arr = new Key[SIZE];
 
-	cout << "\n*********************\n"; 
-	if( !stepped( arr, SIZE, 7, 517, 11 ) ) {
-		cout << "Error\n";
-	}
-	cout << "Generated sequence:\n";
-	show_arr( arr, SIZE );
+	LessThan less; // functor
 
-	if( !sort_insert_sent( arr, SIZE ) ) {
-		cout << "Failed sort\n";
-	}
-	cout << "\nSorted with sentinel insertion:\n";
-	show_arr( arr, SIZE );
-	if( is_sorted( arr, SIZE ) )
-		cout << "SUCCESS\n";
-	else
-		cout << "ARRAY IS UNSORTED\n";
+	assert( rand_seq( (int *)arr, SIZE, 0, INT_MAX) );
+	cout << "Sort time for " << SIZE << " ints: " 
+	     << sort_time_test( sort_radix_msd, arr, SIZE, less, 8 )
+	     << "ms"  << endl;
+	cout << "Comparisons: " << less.amount() << endl;
+	cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
+	show_arr( (int *)arr, SIZE );
+	
 
-	cout << "\n*********************\n"; 
-	if( !stepped( arr, SIZE, 23, 113, 7 ) ) {
-		cout << "Error\n";
-	}
-	cout << "Generated sequence:\n";
-	show_arr( arr, SIZE );
-	if( !sort_insert_bin( arr, SIZE ) ) {
-		cout << "Failed sort\n";
-	}
-	cout << "\nSorted with binary insertion:\n";
-	show_arr( arr, SIZE );
-	if( is_sorted( arr, SIZE ) )
-		cout << "SUCCESS\n";
-	else
-		cout << "ARRAY IS UNSORTED\n";
-
-	cout << "\n*********************\n"; 
-	if( !stepped( arr, SIZE, 19, 213, 11 ) ) {
-		cout << "Error\n";
-	}
-	cout << "Generated sequence:\n";
-	show_arr( arr, SIZE );
-	if( !MSD2( arr, SIZE ) ) {
-		cout << "Failed sort\n";
-	}
-	cout << "\nSorted with MSD sort:\n";
-	show_arr( arr, SIZE );
-	if( is_sorted( arr, SIZE ) )
-		cout << "SUCCESS\n";
-	else
-		cout << "ARRAY IS UNSORTED\n";
+	/*
+	 *cout << "\nTesting C qsort" << endl;
+	 *assert( rand_seq( arr, SIZE, 0, 9999) );
+	 *cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
+	 *cout << "C qsort time for " << SIZE << " ints: " 
+	 *     << qsort_time_test( arr, SIZE, less_than )
+	 *     << endl;
+	 *cout << "Comparisons: " << comps << endl;
+	 */
 
 #ifdef _MSC_VER
 	getchar();
