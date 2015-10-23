@@ -19,7 +19,7 @@ typedef int Key;
 #define NUM_SEQ 4
 int_seq seq_arr[NUM_SEQ] = { ord, rord, stepped, rand_seq };
 const char * seq_str[NUM_SEQ] = { "ordered", "right-ordered",
-                           "stepped", "random"         };
+                                  "stepped", "random"         };
 
 //==============================================================================
 // functors
@@ -68,8 +68,8 @@ int less_than( const void * a, const void * b )
 {
 	++comps;
 	if( *(Key*)a < *(Key*)b )
-		return 1;
-	return 0;
+		return 0;
+	return 1;
 }
 //==============================================================================
 
@@ -192,10 +192,12 @@ int sort_radix_msd( Key * arr, int size, Compare & cmp, short word )
 	MSRadixG( arr, 0, size - 1, cmp, type_size/word - 1, word );
 	delete[] aux;
 	aux = NULL;
+	cout << "///" << endl;
 	cout << "Recursion depth = " << recursion_depth << endl;
-	cout << "Stack using for arrays: " 
+	cout << "Memory cost for arrays: " 
 	     << (memory_cost > 1024 ? memory_cost / 1024 : memory_cost )
 	     << (memory_cost > 1024 ? "Mb" : "Kb") << endl;
+	memory_cost = 0;
 	recursion_depth = 0;
 	return 1;
 }
@@ -231,10 +233,10 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
 
 	for( int i = 0; i < NUM_SEQ; i++ ) {
 		int_seq seq = seq_arr[i];
-		for( int k = 0; k < 80; ++k ) cout << '=';
+		for( int k = 0; k < 79; ++k ) cout << '=';
 		cout << endl;
 		cout << "Sequence: " << seq_str[i] << endl;
-		for( int k = 0; k < 30; ++k ) cout << '*';
+		for( int k = 0; k < 30; ++k ) cout << '-';
 		cout << endl;
 
 		for( int size = min_arr_size; 
@@ -277,23 +279,70 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
 			arr = NULL;
 			cmp.reset();
 		}
-		for( int k = 0; k < 80; ++k ) cout << '=';
+		for( int k = 0; k < 79; ++k ) cout << '=';
 		cout << endl;
 	}
 	return 1;
 }
 
-double qsort_time_test( Key * arr, int size, 
+int qsort_time_test( int min_arr_size, int max_arr_size, int size_step,
                         int (*cmp)( const void *, const void * ))
 {
+	if( !size_step || min_arr_size > max_arr_size )
+		return 0;
 	clock_t clock1;
 	clock_t clock2;
-
-	clock1 = clock();
-	qsort( arr, size, sizeof(*arr), cmp );
-	clock2 = clock();
+	Key * arr = NULL;
+	int min_key = 0;
+	int max_key = INT_MAX;
+	int key_step = 1000;
 	
-	return 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC;
+	for( int i = 0; i < NUM_SEQ; i++ ) {
+		int_seq seq = seq_arr[i];
+		for( int k = 0; k < 79; ++k ) cout << '=';
+		cout << endl;
+		cout << "Sequence: " << seq_str[i] << endl;
+		for( int k = 0; k < 30; ++k ) cout << '-';
+		cout << endl;
+
+		for( int size = min_arr_size; 
+		     size <= max_arr_size; 
+		     size += size_step )
+		{
+			int ret;
+			arr = new Key[size];
+			ret = seq( arr, size, min_key, max_key, key_step );
+			if( !ret ) {
+				cerr << "ERROR: sequence isn't created"
+				     << endl;
+				delete[] arr;
+				arr = NULL;
+				return 0;
+			}
+			clock1 = clock();
+			qsort( arr, size, sizeof( *arr ), cmp );
+			clock2 = clock();
+			if( !is_sorted( arr, size ) ) {
+				cerr << "ERROR: result's not sorted"
+				     << endl;
+				delete[] arr;
+				arr = NULL;
+				return 0;
+			}
+
+
+			cout << "Sort time for " << size << " elements: "
+			     << 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC
+			     << "ms; ";
+			cout << "Comparisons: " << comps << endl;
+			delete[] arr;
+			arr = NULL;
+			comps = 0;
+		}
+		for( int k = 0; k < 79; ++k ) cout << '=';
+		cout << endl;
+	}
+	return 1;
 }
 
 #define SIZE (int)1000
@@ -303,7 +352,7 @@ int main( int argc, char ** argv )
 	srand(time(0));
 	LessThan less; // functor
 	
-	for( int k = 0; k < 80; ++k ) cout << '#';
+	for( int k = 0; k < 79; ++k ) cout << '#';
 	cout << endl;
 	cout << "TESTING INSERTION SORT WITH SENTINEL" << endl;
 	if( !sort_time_test( 5e3, 50e3, 5e3, sort_insert_sent, less ) )
@@ -311,29 +360,44 @@ int main( int argc, char ** argv )
 		cerr << "ERROR: Test failed" << endl;
 		return 1;
 	}
-	for( int k = 0; k < 80; ++k ) cout << '#';
-	cout << endl;
-	/* checking sort_insert_sent */
-	/*
-	 *assert( rand_seq( (int *)arr, SIZE, 0, INT_MAX) );
-	 *cout << "Sort time for " << SIZE << " ints: " 
-	 *     << sort_time_test( sort_radix_msd, arr, SIZE, less, 8 )
-	 *     << "ms"  << endl;
-	 *cout << "Comparisons: " << less.amount() << endl;
-	 *cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
-	 */
-	//show_arr( (int *)arr, SIZE );
+	for( int k = 0; k < 79; ++k ) cout << '#';
+	cout << endl << endl;
 	
+	for( int k = 0; k < 79; ++k ) cout << '#';
+	cout << endl;
+	cout << "TESTING INSERTION SORT WITH BINARY SEARCH" << endl;
+	if( !sort_time_test( 5e3, 50e3, 5e3, sort_insert_bin, less ) )
+	{
+		cerr << "ERROR: Test failed" << endl;
+		return 1;
+	}
+	for( int k = 0; k < 79; ++k ) cout << '#';
+	cout << endl;
 
-	/*
-	 *cout << "\nTesting C qsort" << endl;
-	 *assert( rand_seq( arr, SIZE, 0, 9999) );
-	 *cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
-	 *cout << "C qsort time for " << SIZE << " ints: " 
-	 *     << qsort_time_test( arr, SIZE, less_than )
-	 *     << endl;
-	 *cout << "Comparisons: " << comps << endl;
-	 */
+	for( int i = 1; i < 16; i *= 2 ) {
+		cout << endl;
+		for( int k = 0; k < 79; ++k ) cout << '#';
+		cout << endl;
+		cout << "TESTING RADIX MSD SORT; WORD: " << i << endl;
+		if( !sort_time_test( 5e3, 50e3, 5e3, sort_radix_msd, less, i ) )
+		{
+			cerr << "ERROR: Test failed" << endl;
+			return 1;
+		}
+		for( int k = 0; k < 79; ++k ) cout << '#';
+		cout << endl;
+	}
+
+	cout << endl;
+	for( int k = 0; k < 79; ++k ) cout << '#';
+	cout << endl;
+	cout << "TESTING C QSORT" << endl;
+	if( !qsort_time_test( 5e4, 50e4, 5e4, less_than ) ) {
+		cerr << "ERROR: Test failed" << endl;
+		return 1;
+	}
+	for( int k = 0; k < 79; ++k ) cout << '#';
+	cout << endl;
 
 #ifdef _MSC_VER
 	getchar();
