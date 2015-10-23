@@ -8,12 +8,18 @@
 #include <cstring>
 #include <climits>
 #include <unistd.h>
+#include <cctype>
 #include "../lab1/sequence.hpp"
 
 using namespace std;
 
 typedef unsigned int uint;
 typedef int Key;
+
+#define NUM_SEQ 4
+int_seq seq_arr[NUM_SEQ] = { ord, rord, stepped, rand_seq };
+const char * seq_str[NUM_SEQ] = { "ordered", "right-ordered",
+                           "stepped", "random"         };
 
 //==============================================================================
 // functors
@@ -206,19 +212,75 @@ int is_sorted( Key * arr, int size )
 	return 1;
 }
 
+
 template <typename Compare>
-double sort_time_test( int (*sort)( Key *, int, Compare&, short ),
-                       Key * arr, int size, Compare & cmp, short word = 0 )
+int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
+                    int (*sort)( Key *, int, Compare&, short ),
+                    Compare & cmp, short word = 0 )
 {
+	if( !sort || !size_step || min_arr_size > max_arr_size )
+		return 0;
 	clock_t clock1;
 	clock_t clock2;
-
-	clock1 = clock();
-	assert( sort( arr, size, cmp, word ) );
-	clock2 = clock();
+	Key * arr = NULL;
+	int min_key = 0;
+	int max_key = INT_MAX;
+	int key_step = 1000;
 	
-	return 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC;
+	cmp.reset();
 
+	for( int i = 0; i < NUM_SEQ; i++ ) {
+		int_seq seq = seq_arr[i];
+		for( int k = 0; k < 80; ++k ) cout << '=';
+		cout << endl;
+		cout << "Sequence: " << seq_str[i] << endl;
+		for( int k = 0; k < 30; ++k ) cout << '*';
+		cout << endl;
+
+		for( int size = min_arr_size; 
+		     size <= max_arr_size; 
+		     size += size_step )
+		{
+			int ret;
+			arr = new Key[size];
+			ret = seq( arr, size, min_key, max_key, key_step );
+			if( !ret ) {
+				cerr << "ERROR: sequence isn't created"
+				     << endl;
+				delete[] arr;
+				arr = NULL;
+				return 0;
+			}
+			clock1 = clock();
+			ret = sort( arr, size, cmp, word );
+			clock2 = clock();
+			if( !ret ) {
+				cerr << "ERROR: failed sort" << endl;
+				delete[] arr;
+				arr = NULL;
+				return 0;
+			}
+			if( !is_sorted( arr, size ) ) {
+				cerr << "ERROR: result's not sorted"
+				     << endl;
+				delete[] arr;
+				arr = NULL;
+				return 0;
+			}
+
+
+			cout << "Sort time for " << size << " elements: "
+			     << 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC
+			     << "ms; ";
+			cout << "Comparisons: " << cmp.amount() << endl;
+			delete[] arr;
+			arr = NULL;
+			cmp.reset();
+		}
+		for( int k = 0; k < 80; ++k ) cout << '=';
+		cout << endl;
+	}
+	return 1;
 }
 
 double qsort_time_test( Key * arr, int size, 
@@ -239,16 +301,27 @@ double qsort_time_test( Key * arr, int size,
 int main( int argc, char ** argv )
 {
 	srand(time(0));
-	Key * arr = new Key[SIZE];
-
 	LessThan less; // functor
-
-	assert( rand_seq( (int *)arr, SIZE, 0, INT_MAX) );
-	cout << "Sort time for " << SIZE << " ints: " 
-	     << sort_time_test( sort_radix_msd, arr, SIZE, less, 8 )
-	     << "ms"  << endl;
-	cout << "Comparisons: " << less.amount() << endl;
-	cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
+	
+	for( int k = 0; k < 80; ++k ) cout << '#';
+	cout << endl;
+	cout << "TESTING INSERTION SORT WITH SENTINEL" << endl;
+	if( !sort_time_test( 5e3, 50e3, 5e3, sort_insert_sent, less ) )
+	{
+		cerr << "ERROR: Test failed" << endl;
+		return 1;
+	}
+	for( int k = 0; k < 80; ++k ) cout << '#';
+	cout << endl;
+	/* checking sort_insert_sent */
+	/*
+	 *assert( rand_seq( (int *)arr, SIZE, 0, INT_MAX) );
+	 *cout << "Sort time for " << SIZE << " ints: " 
+	 *     << sort_time_test( sort_radix_msd, arr, SIZE, less, 8 )
+	 *     << "ms"  << endl;
+	 *cout << "Comparisons: " << less.amount() << endl;
+	 *cout << (is_sorted( arr, SIZE ) ? "Sorted" : "NOT sorted") << endl;
+	 */
 	//show_arr( (int *)arr, SIZE );
 	
 
