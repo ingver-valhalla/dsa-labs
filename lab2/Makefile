@@ -4,9 +4,11 @@ LAB1=../lab1
 
 sorts: sorts.cpp sequence.o
 	$(CXX) $(CFLAGS) -o sorts sorts.cpp sequence.o
+sorts-opt: sorts.cpp sequence.o
+	$(CXX) $(CFLAGS) -O3 -o sorts sorts.cpp sequence.o
 
 sequence.o: $(LAB1)/sequence.cpp 
-	$(CXX) $(CFLAGS) -c $(LAB1)/sequence.cpp
+	$(CXX) $(CFLAGS) -O3 -c $(LAB1)/sequence.cpp
 
 clean:
 	rm *.o sorts
