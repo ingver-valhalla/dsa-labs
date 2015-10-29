@@ -1,14 +1,15 @@
 CXX=g++
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -O3
 LAB1=../lab1
 
-sorts: sorts.cpp sequence.o
-	$(CXX) $(CFLAGS) -o sorts sorts.cpp sequence.o
-sorts-opt: sorts.cpp sequence.o
-	$(CXX) $(CFLAGS) -O3 -o sorts sorts.cpp sequence.o
+test_sorts: sequence.o test_sorts.o
+	$(CXX) $(CFLAGS) -o test_sorts test_sorts.o sequence.o
 
-sequence.o: $(LAB1)/sequence.cpp 
-	$(CXX) $(CFLAGS) -O3 -c $(LAB1)/sequence.cpp
+test_sorts.o: sequence.o test_sorts.cpp sorts.hpp
+	$(CXX) $(CFLAGS) -c test_sorts.cpp 
+
+sequence.o: $(LAB1)/sequence.hpp $(LAB1)/sequence.cpp 
+	$(CXX) $(CFLAGS) -c $(LAB1)/sequence.cpp
 
 clean:
-	rm *.o sorts
+	rm *.o test_sorts
