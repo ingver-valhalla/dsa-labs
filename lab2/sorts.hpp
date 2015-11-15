@@ -130,11 +130,13 @@ int sort_radix_msd( Key * arr, int size, Compare & cmp, short word )
 	MSRadixG( arr, 0, size - 1, cmp, type_size/word - 1, word );
 	delete[] aux;
 	aux = NULL;
-	std::cout << "///" << std::endl;
-	std::cout << "Recursion depth = " << recursion_depth << std::endl;
-	std::cout << "Memory cost for arrays: " 
-	     << (memory_cost > 1024 ? memory_cost / 1024 : memory_cost )
-	     << (memory_cost > 1024 ? "Mb" : "Kb") << std::endl;
+	/*
+	 *std::cout << "///" << std::endl;
+	 *std::cout << "Recursion depth = " << recursion_depth << std::endl;
+	 *std::cout << "Memory cost for arrays: " 
+	 *     << (memory_cost > 1024 ? memory_cost / 1024 : memory_cost )
+	 *     << (memory_cost > 1024 ? "Mb" : "Kb") << std::endl;
+	 */
 	memory_cost = 0;
 	recursion_depth = 0;
 	return 1;

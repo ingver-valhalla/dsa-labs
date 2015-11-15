@@ -88,6 +88,7 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
                     int (*sort)( Key *, int, Compare&, short ),
                     Compare & cmp, short word = 0 )
 {
+	typedef int (*sort_ptr)(Key*, int, Compare&, short);
 	if( !sort || !size_step || min_arr_size > max_arr_size )
 		return 0;
 	clock_t clock1;
@@ -101,6 +102,9 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
 
 	for( int i = 0; i < NUM_SEQ; i++ ) {
 		int_seq seq = seq_arr[i];
+		/* 10 times for ordered sequence, taking the average */
+		int repeats = (i == 0 && sort == (sort_ptr)sort_insert_sent) ? 500 : 1; 
+
 		for( int k = 0; k < 79; ++k ) cout << '=';
 		cout << endl;
 		cout << "Sequence: " << seq_str[i] << endl;
@@ -122,7 +126,9 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
 				return 0;
 			}
 			clock1 = clock();
-			ret = sort( arr, size, cmp, word );
+			for( int r = 0; r < repeats; ++r ) {
+				ret = sort( arr, size, cmp, word );
+			}
 			clock2 = clock();
 			if( !ret ) {
 				cerr << "ERROR: failed sort" << endl;
@@ -140,9 +146,10 @@ int sort_time_test( int min_arr_size, int max_arr_size, int size_step,
 
 
 			cout << "Sort time for " << size << " elements: "
-			     << 1000.0 * (clock2 - clock1) / CLOCKS_PER_SEC
+			     << 1000.0 * (clock2 - clock1) / (CLOCKS_PER_SEC
+			        * repeats)
 			     << "ms; ";
-			cout << "Comparisons: " << cmp.amount() << endl;
+			cout << "Comparisons: " << cmp.amount() / repeats << "; Repeats: " << repeats << endl;
 			delete[] arr;
 			arr = NULL;
 			cmp.reset();
