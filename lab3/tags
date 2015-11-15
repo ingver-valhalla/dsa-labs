@@ -1,0 +1,49 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CFLAGS	Makefile	/^CFLAGS=-Wall -g -O3$/;"	m
+CXX	Makefile	/^CXX=g++$/;"	m
+Key	search.h	/^	Key( int m ) : m(m) {}$/;"	f	class:Key	access:public	signature:( int m )
+Key	search.h	/^class Key$/;"	c
+Key::Key	search.h	/^	Key( int m ) : m(m) {}$/;"	f	class:Key	access:public	signature:( int m )
+Key::assignments	search.h	/^	static int assignments()$/;"	f	class:Key	access:public	signature:()
+Key::assigns	search.cpp	/^int Key::assigns = 0;$/;"	m	class:Key	file:
+Key::assigns	search.h	/^	static int assigns;$/;"	m	class:Key	access:private
+Key::comparisons	search.h	/^	static int comparisons()$/;"	f	class:Key	access:public	signature:()
+Key::comps	search.cpp	/^int Key::comps = 0;$/;"	m	class:Key	file:
+Key::comps	search.h	/^	static int comps;$/;"	m	class:Key	access:private
+Key::m	search.h	/^	int m;$/;"	m	class:Key	access:private
+Key::operator !=	search.h	/^	bool operator!=( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+Key::operator <	search.h	/^	bool operator<( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+Key::operator =	search.h	/^	Key& operator=( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+Key::operator ==	search.h	/^	bool operator==( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+Key::operator >	search.h	/^	bool operator>( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+Key::operator int	search.h	/^	operator int()$/;"	f	class:Key	access:public	signature:()
+Key::reset_assigns	search.h	/^	static void reset_assigns()$/;"	f	class:Key	access:public	signature:()
+Key::reset_comps	search.h	/^	static void reset_comps()$/;"	f	class:Key	access:public	signature:()
+SIZE	test_search.cpp	4;"	d	file:
+assignments	search.h	/^	static int assignments()$/;"	f	class:Key	access:public	signature:()
+assigns	search.cpp	/^int Key::assigns = 0;$/;"	m	class:Key	file:
+assigns	search.h	/^	static int assigns;$/;"	m	class:Key	access:private
+comparisons	search.h	/^	static int comparisons()$/;"	f	class:Key	access:public	signature:()
+comps	search.cpp	/^int Key::comps = 0;$/;"	m	class:Key	file:
+comps	search.h	/^	static int comps;$/;"	m	class:Key	access:private
+m	search.h	/^	int m;$/;"	m	class:Key	access:private
+main	test_search.cpp	/^int main()$/;"	f	signature:()
+operator !=	search.h	/^	bool operator!=( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+operator <	search.h	/^	bool operator<( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+operator =	search.h	/^	Key& operator=( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+operator ==	search.h	/^	bool operator==( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+operator >	search.h	/^	bool operator>( Key& k )$/;"	f	class:Key	access:public	signature:( Key& k )
+operator int	search.h	/^	operator int()$/;"	f	class:Key	access:public	signature:()
+reset_assigns	search.h	/^	static void reset_assigns()$/;"	f	class:Key	access:public	signature:()
+reset_comps	search.h	/^	static void reset_comps()$/;"	f	class:Key	access:public	signature:()
+search_fib	search.cpp	/^int search_fib( Key * arr, int size, Key key )$/;"	f	signature:( Key * arr, int size, Key key )
+search_inter	search.cpp	/^int search_inter( Key * arr, int size, Key key )$/;"	f	signature:( Key * arr, int size, Key key )
+search_inter	search.h	/^int search_inter( Key * arr, int size, Key key );$/;"	p	signature:( Key * arr, int size, Key key )
+search_seq	search.cpp	/^int search_seq( Key* arr, int size, Key key )$/;"	f	signature:( Key* arr, int size, Key key )
+search_seq	search.h	/^int search_seq( Key* arr, int size, Key key );$/;"	p	signature:( Key* arr, int size, Key key )
+show_arr	test_search.cpp	/^void show_arr( Key* arr, int size )$/;"	f	signature:( Key* arr, int size )
