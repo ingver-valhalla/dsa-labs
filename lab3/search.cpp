@@ -41,15 +41,32 @@ int search_seq( Key* arr, int size, Key key )
 
 int search_inter( Key * arr, int size, Key key )
 {
-	int low = 0, high = size - 1,
-	    pos = low + key.val() * (high - low) / (arr[high].val() - arr[low].val());
-	for( ; low <= high && low <= pos && pos <= high
-	     ; pos = low + arr[pos].val() * (high - low) / (arr[high].val() - arr[low].val()) )
-		if( key < arr[pos] )
-			high = pos - 1;
-		else if( key > arr[pos] )
-			low = pos + 1;
-		else
-			return pos;
+	//std::cout << "search_inter" << std::endl;
+	int low = 0;
+	int high = size - 1;
+	int mid;
+
+	while( arr[high] != arr[low] && key >= arr[low] && key <= arr[high] ) {
+
+		mid = low + (key.val() - arr[low].val()) * ((high - low) / (arr[high].val() - arr[low].val()));
+
+		if( key > arr[mid] ) {
+			low = mid + 1;
+		}
+		else if( key < arr[mid] ) {
+			high = mid - 1;
+		}
+		else {
+			return mid;
+		}
+		//std::cout << "low = " << low << ", mid = " << mid << ", high = " << high << std::endl;
+
+	}
+
+	if( key == arr[low] ) {
+		return low;
+	}
+
 	return -1;
+
 }
