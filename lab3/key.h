@@ -45,6 +45,16 @@ public:
 		return k < *this ;
 	}
 
+	bool operator<=( const Key& k ) const
+	{
+		return *this < k || *this == k;
+	}
+
+	bool operator>=( const Key& k ) const
+	{
+		return *this > k || *this == k;
+	}
+
 	static int comparisons()
 	{
 		return comps;
@@ -65,27 +75,6 @@ public:
 		assigns = 0;
 	}
 
-	/*
-	Key& operator+( Key& k )
-	{
-		return Key( m + k.m );
-	}
-
-	Key& operator-( Key& k )
-	{
-		return Key( m - k.m );
-	}
-
-	Key& operator*( Key& k )
-	{
-		return Key( m * k.m );		
-	}
-
-	Key& operator/( Key& k )
-	{
-		return Key( m / k.m );
-	}
-	*/
 private:
 	int m;
 	static int assigns;
