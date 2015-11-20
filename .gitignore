@@ -251,6 +251,9 @@ _Pvt_Extensions
 gen_seq
 make_coords
 sorts
+test_sorts
+test_key
+test_search
 
 # ignoring MSVC projects for testing on Win
 # suffixed with _sln
