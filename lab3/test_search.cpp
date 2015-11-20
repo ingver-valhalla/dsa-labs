@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 
 #include "key.h"
 #include "search.h"
@@ -19,19 +20,29 @@ int successful_search( Search_p search, int size_of_seq, int num_of_tests )
 
 	Key *arr = NULL;
 	arr = new Key[size_of_seq];
-	if( !make_ord( arr, size_of_seq, 0, size_of_seq ) ) {
+	if( !make_rand( arr, size_of_seq, 0, size_of_seq ) ) {
 		cerr << "successful_search: make_ord couldn't make a sequence"
 		     << endl;
 		delete[] arr;
 		return -1;
 	}
 
+	sort( arr, arr + size_of_seq );
+
+	cout << "After sort: comps = " << Key::comparisons()
+	     << " assigns = " << Key::assignments() << endl;
+
+	Key::reset_comps();
+	Key::reset_assigns();
+
+	//show_arr( arr, size_of_seq );
+
 	for( int i = 0; i < num_of_tests; ++i ) {
 		
 		int index = rand() % size_of_seq;
 		int found_index = -1;
-		cout << "test #" << i << " | index: " << index 
-		     << " arr[index] = " << arr[index].val() << endl;
+		//cout << "test #" << i << " | index: " << index 
+		     //<< " arr[index] = " << arr[index].val() << endl;
 
 		if( (found_index = search( arr, size_of_seq, arr[index] )) == -1 ) {
 			cerr << endl
@@ -41,7 +52,7 @@ int successful_search( Search_p search, int size_of_seq, int num_of_tests )
 			return -1;
 		}
 
-		cout << "FOUND! arr[" << found_index << "] = " << arr[found_index].val() << endl;
+		//cout << "FOUND! arr[" << found_index << "] = " << arr[found_index].val() << endl;
 	}       
 
 	cout << "Average number of comparisons: "
@@ -78,7 +89,7 @@ int main()
 	     ++i, size += SIZE_STEP )
 	{
 		cout << i+1 << ". size = " << size << endl;
-		if( successful_search( search_inter, size, TESTS ) == -1 ) {
+		if( successful_search( search_fib, size, TESTS ) == -1 ) {
 			cout << "Quiting..." << endl;
 			exit( 1 );
 		}
