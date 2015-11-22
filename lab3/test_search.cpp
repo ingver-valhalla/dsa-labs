@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <cmath>
 
 #include "key.h"
 #include "search.h"
@@ -13,24 +14,31 @@ using namespace std;
 
 void show_arr( Key* arr, int size );
 
-int successful_search( Search_p search, int size_of_seq, int num_of_tests )
+int successful_search( Search_p search, int jump, Make_seq_p make_seq, int size_of_seq, int num_of_tests )
 {
 	Key::reset_comps();
 	Key::reset_assigns();
 
 	Key *arr = NULL;
 	arr = new Key[size_of_seq];
-	if( !make_rand( arr, size_of_seq, 0, size_of_seq ) ) {
+	if( !make_seq( arr, size_of_seq, 0, size_of_seq ) ) {
 		cerr << "successful_search: make_ord couldn't make a sequence"
 		     << endl;
 		delete[] arr;
 		return -1;
 	}
 
-	sort( arr, arr + size_of_seq );
-
-	cout << "After sort: comps = " << Key::comparisons()
+	cout << "After creation: comps = " << Key::comparisons()
 	     << " assigns = " << Key::assignments() << endl;
+	//show_arr( arr, size_of_seq );
+	Key::reset_comps();
+	Key::reset_assigns();
+
+	if( make_seq == make_rand ) {
+		sort( arr, arr + size_of_seq );
+		cout << "After sort: comps = " << Key::comparisons()
+	     	     << " assigns = " << Key::assignments() << endl;
+	}
 
 	Key::reset_comps();
 	Key::reset_assigns();
@@ -44,7 +52,7 @@ int successful_search( Search_p search, int size_of_seq, int num_of_tests )
 		//cout << "test #" << i << " | index: " << index 
 		     //<< " arr[index] = " << arr[index].val() << endl;
 
-		if( (found_index = search( arr, size_of_seq, arr[index] )) == -1 ) {
+		if( (found_index = search( arr, size_of_seq, arr[index], jump )) == -1 ) {
 			cerr << endl
 			     << "successful_search: didn't find element. Check the algorithm!"
 			     << endl;
@@ -53,6 +61,53 @@ int successful_search( Search_p search, int size_of_seq, int num_of_tests )
 		}
 
 		//cout << "FOUND! arr[" << found_index << "] = " << arr[found_index].val() << endl;
+	}       
+
+	cout << "Average number of comparisons: "
+	     << Key::comparisons() / (double)num_of_tests
+	     << endl;
+
+	delete[] arr;
+	Key::reset_comps();
+	Key::reset_assigns();
+
+	return 1;
+}
+
+int failed_search( Search_p search, int jump, int size_of_seq, int num_of_tests)
+{
+	Key::reset_comps();
+	Key::reset_assigns();
+
+	Key *arr = NULL;
+	arr = new Key[size_of_seq];
+	if( !make_odd( arr, size_of_seq, 0, size_of_seq ) ) {
+		cerr << "successful_search: make_ord couldn't make a sequence"
+		     << endl;
+		delete[] arr;
+		return -1;
+	}
+
+	cout << "After creation: comps = " << Key::comparisons()
+	     << " assigns = " << Key::assignments() << endl;
+	//show_arr( arr, size_of_seq );
+	Key::reset_comps();
+	Key::reset_assigns();
+
+	for( int i = 0; i < num_of_tests; ++i ) {
+		
+		Key to_find = rand() * 2;
+		int found_index = -1;
+		//cout << "test #" << i << " arr[index] = " << to_find.val() << endl;
+
+		if( (found_index = search( arr, size_of_seq, to_find, jump )) != -1 ) {
+			cerr << endl
+			     << "failed_search: element somehow found. Check the algorithm!"
+			     << " index : " << found_index
+			     << endl;
+			delete[] arr;
+			return -1;
+		}
 	}       
 
 	cout << "Average number of comparisons: "
@@ -79,28 +134,75 @@ int main()
 {
 	srand( time(NULL) );
 
-#define MIN_SIZE 1e5
-#define MAX_SIZE 1e6
-#define SIZE_STEP 1e5
-#define TESTS 100
+#define MIN_SIZE (int)1e5
+#define MAX_SIZE (MIN_SIZE * 10)
+#define SIZE_STEP MIN_SIZE
+#define TESTS 100 
 
+	cout << "TESTING SEQ SEARCH" << endl;
+	cout << "FAIL SEARCH >>>>>" << endl;
+	cout << "===============================================================================" << endl;
+	//cout << "ordered sequence" << endl;
 	for( int i = 0, size = MIN_SIZE;
 	     size <= MAX_SIZE;
 	     ++i, size += SIZE_STEP )
 	{
+		int jump = sqrt(size);
+		//cout << "jump = " << jump << endl;
 		cout << i+1 << ". size = " << size << endl;
-		if( successful_search( search_fib, size, TESTS ) == -1 ) {
+		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
 			cout << "Quiting..." << endl;
+#ifdef _MSC_VER
+			getchar();
+#endif
 			exit( 1 );
 		}
 		cout << endl;
 	}
+/*
+	cout << "===============================================================================" << endl;
+	cout << "random sequence" << endl;
+	for( int i = 0, size = MIN_SIZE;
+	     size <= MAX_SIZE;
+	     ++i, size += SIZE_STEP )
+	{
+		int jump = sqrt(size);
+		cout << "jump = " << jump << endl;
+		cout << i+1 << ". size = " << size << endl;
+		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
+			cout << "Quiting..." << endl;
+#ifdef _MSC_VER
+			getchar();
+#endif
+			exit( 1 );
+		}
+		cout << endl;
+	}
+	cout << "===============================================================================" << endl;
+	cout << "sparse sequence" << endl;
+	for( int i = 0, size = MIN_SIZE;
+	     size <= MAX_SIZE;
+	     ++i, size += SIZE_STEP )
+	{
+		int jump = sqrt(size);
+		cout << "jump = " << jump << endl;
+		cout << i+1 << ". size = " << size << endl;
+		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
+			cout << "Quiting..." << endl;
+#ifdef _MSC_VER
+			getchar();
+#endif
+			exit( 1 );
+		}
+		cout << endl;
+	}
+	*/
 
 	//Key arr[100];
 	//make_ord( arr, 100, 0, 100 );
 	//show_arr( arr, 100 );
 
-#ifdef __MSC_VER
+#ifdef _MSC_VER
 	getchar();
 #endif
 
