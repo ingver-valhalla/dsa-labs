@@ -21,7 +21,14 @@ public:
 		++assigns;
 		return *this;
 	}
-	
+
+	const Key& operator=( const Key& k )
+	{
+		m = k.m;
+		++assigns;
+		return *this;
+	}
+
 	bool operator==( const Key& k ) const
 	{
 		++comps;
