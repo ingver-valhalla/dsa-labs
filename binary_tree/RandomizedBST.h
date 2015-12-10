@@ -26,8 +26,52 @@ class RandomizedBST : AbstractBST<Item> {
 
 		void print( std::ostream & ) const;
 
-	private:
+		//temp
+		void lrotate_by_val( const Item & val )
+		{
+			Node ** p = &root;
 
+			while( *p != NULL ) {
+
+				if( (*p)->data > val ) {
+					p = &(*p)->left;
+				}
+				else if( (*p)->data < val ) {
+					p = &(*p)->right;
+				}
+				else {
+					break;
+				}
+			}
+
+			if( *p != NULL ) {
+				rotate_left( p );
+			}
+		}
+
+		void rrotate_by_val( const Item & val )
+		{
+			Node ** p = &root;
+
+			while( *p != NULL ) {
+
+				if( (*p)->data > val ) {
+					p = &(*p)->left;
+				}
+				else if( (*p)->data < val ) {
+					p = &(*p)->right;
+				}
+				else {
+					break;
+				}
+			}
+
+			if( *p != NULL ) {
+				rotate_right( p );
+			}
+		}
+
+	private:
 		struct Node {
 
 			Item data;
@@ -41,10 +85,16 @@ class RandomizedBST : AbstractBST<Item> {
 		Node * root;
 
 		void insert( Node ** , const Item & );
+		void insert_to_root( Node **, const Item & );
+
 		void remove( Node ** , const Item & );
+
 		// temp
 		void clear( Node ** );
 		void print( Node *, std::ostream & ) const;
+
+		void rotate_left( Node ** );
+		void rotate_right( Node ** );
 };
 
 
