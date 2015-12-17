@@ -55,24 +55,22 @@ void RandomizedBST<Item>::insert( const Item & to_insert )
 template < typename Item >
 void RandomizedBST<Item>::insert( Node ** pnode, const Item & to_insert )
 {
-	// TODO
-
 	Node * node = *pnode;
 	
 	if( node == NULL ) {
-		std::cout << "inserting to leaf" << std::endl;
+		//std::cout << "inserting to leaf" << std::endl;
 		insert_to_root( pnode, to_insert );
 	}
 	else if( std::rand() % 2 ) {
-		std::cout << "inserting to root" << std::endl;
+		//std::cout << "inserting to root" << std::endl;
 		insert_to_root( pnode, to_insert );
 	}
 	else if( to_insert < node->data ) {
-		std::cout << "skipping " << node->data << std::endl;
+		//std::cout << "skipping " << node->data << std::endl;
 		insert( &node->left, to_insert );
 	}
 	else {
-		std::cout << "skipping " << node->data << std::endl;
+		//std::cout << "skipping " << node->data << std::endl;
 		insert( &node->right, to_insert );
 	}
 }
@@ -86,22 +84,22 @@ void RandomizedBST<Item>::insert_to_root( Node ** pnode, const Item & to_insert 
 	if( node == NULL ) {
 		*pnode = new Node( to_insert, NULL, NULL );
 
-		print( std::cout );
-		std::cout << std::endl;
+		//print( std::cout );
+		//std::cout << std::endl;
 	}
 	else if( to_insert < node->data ) {
 		insert_to_root( &node->left, to_insert );
 		rotate_right( pnode );
 
-		print( std::cout );
-		std::cout << std::endl;
+		//print( std::cout );
+		//std::cout << std::endl;
 	}
 	else if( to_insert > node->data ) {
 		insert_to_root( &node->right, to_insert );
 		rotate_left( pnode );
 
-		print( std::cout );
-		std::cout << std::endl;
+		//print( std::cout );
+		//std::cout << std::endl;
 	}
 }
 
@@ -115,8 +113,6 @@ void RandomizedBST<Item>::remove( const Item & to_remove )
 template < typename Item >
 void RandomizedBST<Item>::remove( Node ** pnode, const Item & to_remove )
 {
-	// TODO
-	// TESTING
 	Node * node = *pnode;
 	if( node == NULL ) {
 		return;
@@ -129,12 +125,12 @@ void RandomizedBST<Item>::remove( Node ** pnode, const Item & to_remove )
 	}
 	else if( !node->left && !node->right ) {
 
-		std::cout << "removing from leaf" << std::endl;
+		//std::cout << "removing from leaf" << std::endl;
 		delete node;
 		*pnode = NULL;
 
-		print( std::cout );
-		std::cout << std::endl;
+		//print( std::cout );
+		//std::cout << std::endl;
 	}
 	else {
 
@@ -142,7 +138,7 @@ void RandomizedBST<Item>::remove( Node ** pnode, const Item & to_remove )
 
 		if( min_node != NULL ) {
 
-			std::cout << "removing min from right and merging" << std::endl;
+			//std::cout << "removing min from right and merging" << std::endl;
 			while( min_node->left != NULL )
 				min_node = min_node->left;
 
@@ -150,16 +146,16 @@ void RandomizedBST<Item>::remove( Node ** pnode, const Item & to_remove )
 			remove( pnode, min );
 			*pnode = new Node( min, node->left, node->right );
 
-			print( std::cout );
-			std::cout << std::endl;
+			//print( std::cout );
+			//std::cout << std::endl;
 		}
 		else {
 
-			std::cout << "replacing with left child" << std::endl;
+			//std::cout << "replacing with left child" << std::endl;
 			*pnode = node->left;
 
-			print( std::cout );
-			std::cout << std::endl;
+			//print( std::cout );
+			//std::cout << std::endl;
 		}
 		delete node;
 	}
@@ -260,4 +256,62 @@ void RandomizedBST<Item>::rotate_right( Node ** pnode )
 		t->right = node;
 		*pnode = t;
 	}
+}
+
+template < typename Item >
+typename RandomizedBST<Item>::PreOrderIterator
+RandomizedBST<Item>::traverse_pre_order( ) const
+{
+	PreOrderIterator it;
+	it.node = root;
+	return it;
+}
+
+template < typename Item >
+const Item &
+RandomizedBST<Item>::PreOrderIterator::operator * ( )
+{
+	return node->data;
+}
+
+template < typename Item >
+const typename RandomizedBST<Item>::PreOrderIterator &
+RandomizedBST<Item>::PreOrderIterator::operator ++ ( )
+{
+	if( !ended ) {
+
+		if( node->left != NULL ) {
+			st.push( std::make_pair( node->right, level+1 ) );
+			node = node->left;
+			++level;
+		}
+		else if( node->right != NULL ) {
+			node = node->right;
+			++level;
+		}
+		else {
+
+			while( !st.empty( ) && st.top( ).first == NULL ) {
+				level = st.top( ).second;
+				st.pop( );
+			}
+
+			if( !st.empty( ) ) {
+				node = st.top( ).first;
+				level = st.top( ).second;
+				st.pop( );
+			}
+			else {
+				ended = true;
+			}
+		}
+	}
+	return *this;
+}
+
+template < typename Item >
+const typename RandomizedBST<Item>::PreOrderIterator &
+RandomizedBST<Item>::PreOrderIterator::operator ++ ( int )
+{
+	return operator ++ ( );
 }

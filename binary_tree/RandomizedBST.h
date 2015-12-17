@@ -4,13 +4,19 @@
 #define RANDOMIZED_BST_H
 
 #include <ostream>
+#include <stack>
+#include <utility>
 #include "AbstractBST.h"
-
 
 template < typename Item >
 class RandomizedBST : AbstractBST<Item> {
 
+	class Node;
+
 	public:
+
+		class PreOrderIterator;
+
 		RandomizedBST( );
 		~RandomizedBST( );
 
@@ -24,52 +30,31 @@ class RandomizedBST : AbstractBST<Item> {
 		virtual const Item & get_max( ) const;
 		virtual void clear( );
 
+		virtual PreOrderIterator traverse_pre_order( ) const;
+
+
+		class PreOrderIterator {
+			
+			friend RandomizedBST;
+
+			public: 
+				PreOrderIterator( ) : ended( false ), level( 0 ) { }
+
+				const Item & operator * ();
+				const PreOrderIterator & operator ++ ( );
+				const PreOrderIterator & operator ++ ( int );
+				bool end( ) { return ended; }
+				int get_level( ) { return level; }
+
+			private: 
+				Node * node;
+				std::stack< std::pair<Node *, int> > st;
+				bool ended;
+				int level;
+		};
+
+
 		void print( std::ostream & ) const;
-
-		//temp
-		void lrotate_by_val( const Item & val )
-		{
-			Node ** p = &root;
-
-			while( *p != NULL ) {
-
-				if( (*p)->data > val ) {
-					p = &(*p)->left;
-				}
-				else if( (*p)->data < val ) {
-					p = &(*p)->right;
-				}
-				else {
-					break;
-				}
-			}
-
-			if( *p != NULL ) {
-				rotate_left( p );
-			}
-		}
-
-		void rrotate_by_val( const Item & val )
-		{
-			Node ** p = &root;
-
-			while( *p != NULL ) {
-
-				if( (*p)->data > val ) {
-					p = &(*p)->left;
-				}
-				else if( (*p)->data < val ) {
-					p = &(*p)->right;
-				}
-				else {
-					break;
-				}
-			}
-
-			if( *p != NULL ) {
-				rotate_right( p );
-			}
-		}
 
 	private:
 		struct Node {
@@ -89,7 +74,6 @@ class RandomizedBST : AbstractBST<Item> {
 
 		void remove( Node ** , const Item & );
 
-		// temp
 		void clear( Node ** );
 		void print( Node *, std::ostream & ) const;
 
