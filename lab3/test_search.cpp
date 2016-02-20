@@ -134,13 +134,15 @@ int main()
 {
 	srand( time(NULL) );
 
-#define MIN_SIZE (int)1e5
+#define MIN_SIZE (int)1e4
 #define MAX_SIZE (MIN_SIZE * 10)
 #define SIZE_STEP MIN_SIZE
 #define TESTS 100 
 
-	cout << "TESTING SEQ SEARCH" << endl;
-	cout << "FAIL SEARCH >>>>>" << endl;
+	Search_p search = search_jump2;
+
+	cout << "testing jump search" << endl;
+	cout << "FAILED SEARCH >>>>" << endl;
 	cout << "===============================================================================" << endl;
 	//cout << "ordered sequence" << endl;
 	for( int i = 0, size = MIN_SIZE;
@@ -150,7 +152,7 @@ int main()
 		int jump = sqrt(size);
 		//cout << "jump = " << jump << endl;
 		cout << i+1 << ". size = " << size << endl;
-		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
+		if( failed_search( search, jump, size, TESTS ) == -1 ) {
 			cout << "Quiting..." << endl;
 #ifdef _MSC_VER
 			getchar();
@@ -159,17 +161,38 @@ int main()
 		}
 		cout << endl;
 	}
-/*
+
+	/*
+	cout << "testing 2 level jump search" << endl;
+	cout << "SUCCESSFUL SEARCH >>>>" << endl;
+	cout << "===============================================================================" << endl;
+	cout << "ordered sequence" << endl;
+	for( int i = 0, size = MIN_SIZE;
+	     size <= MAX_SIZE;
+	     ++i, size += SIZE_STEP )
+	{
+		int jump = sqrt(size);
+		//cout << "jump = " << jump << endl;
+		cout << i+1 << ". size = " << size << endl;
+		if( successful_search( search, jump, make_ord, size, TESTS ) == -1 ) {
+			cout << "Quiting..." << endl;
+#ifdef _MSC_VER
+			getchar();
+#endif
+			exit( 1 );
+		}
+		cout << endl;
+	}
 	cout << "===============================================================================" << endl;
 	cout << "random sequence" << endl;
 	for( int i = 0, size = MIN_SIZE;
-	     size <= MAX_SIZE;
-	     ++i, size += SIZE_STEP )
+		 size <= MAX_SIZE;
+		 ++i, size += SIZE_STEP )
 	{
 		int jump = sqrt(size);
 		cout << "jump = " << jump << endl;
 		cout << i+1 << ". size = " << size << endl;
-		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
+		if( failed_search( search, jump, size, TESTS ) == -1 ) {
 			cout << "Quiting..." << endl;
 #ifdef _MSC_VER
 			getchar();
@@ -178,16 +201,17 @@ int main()
 		}
 		cout << endl;
 	}
+
 	cout << "===============================================================================" << endl;
 	cout << "sparse sequence" << endl;
 	for( int i = 0, size = MIN_SIZE;
-	     size <= MAX_SIZE;
-	     ++i, size += SIZE_STEP )
+		 size <= MAX_SIZE;
+		 ++i, size += SIZE_STEP )
 	{
 		int jump = sqrt(size);
 		cout << "jump = " << jump << endl;
 		cout << i+1 << ". size = " << size << endl;
-		if( failed_search( search_seq, jump, size, TESTS ) == -1 ) {
+		if( failed_search( search, jump, size, TESTS ) == -1 ) {
 			cout << "Quiting..." << endl;
 #ifdef _MSC_VER
 			getchar();
@@ -196,15 +220,17 @@ int main()
 		}
 		cout << endl;
 	}
-	*/
+	
 
-	//Key arr[100];
-	//make_ord( arr, 100, 0, 100 );
-	//show_arr( arr, 100 );
+	Key arr[100];
+	make_ord( arr, 100, 0, 100 );
+	show_arr( arr, 100 );
 
 #ifdef _MSC_VER
 	getchar();
 #endif
+
+*/
 
 	return 0;
 }

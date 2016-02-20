@@ -1,8 +1,9 @@
 // search.cpp
 
+#include <iostream>
+#include <cmath>
 #include "key.h"
 #include "search.h"
-#include <iostream>
 
 int search_fib( Key * arr, int size, Key key, int jump )
 {
@@ -105,4 +106,20 @@ int search_jump( Key * arr, int size, Key key, int jump )
 		}
 	}
 	return -1;
+}
+
+int search_jump2( Key * arr, int size, Key key, int )
+{
+	if( !arr || size <= 0 ) 
+		return -1;
+
+	int jump = sqrt( size );
+	int pos = jump;
+
+	for( ; pos < size && arr[pos] < key; pos += jump );
+
+	if( pos - jump >= size )
+		return -1;
+
+	return search_jump( arr + (pos - jump), jump+1, key, sqrt( jump+1 ) );
 }
