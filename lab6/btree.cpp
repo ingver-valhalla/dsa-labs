@@ -48,7 +48,7 @@ void btree_split_child( BTreeNode * node, int index )
 
 	node->children[index+1] = sibling;
 
-	for( int j = node->n - 1; j > index; --j ) {
+	for( int j = node->n - 1; j >= index; --j ) {
 		node->keys[j+1] = node->keys[j];
 	}
 

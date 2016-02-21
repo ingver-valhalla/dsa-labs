@@ -1,88 +1,60 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include "btree.h"
+
 
 using namespace std;
 
+void print_btreenode( BTreeNode * node, int level )
+{
+	if( node == NULL ) {
+		cout << "node is NULL";
+		return;
+	}
+	cout << "[" << node->keys[0];
+	for( int i = 1; i < node->n; ++i ) {
+		cout << " " << node->keys[i];
+	}
+	cout << "]";
+}
+
+void print_btree1( BTreeNode * root, int level )
+{
+	for( int i = 0; i < level; ++i ) {
+		cout << "  ";
+	}
+	if( root == NULL ) {
+		cout << "root is NULL" << endl;
+		return;
+	}
+	print_btreenode( root, level );
+	cout << endl;
+	
+	if( !root->leaf ) {
+		for(int i = 0; i < root->n + 1; ++i ) {
+			print_btree1( root->children[i], level+1 );
+		}
+	}
+
+}
+
 void print_btree( BTreeNode * root )
 {
-	BTreeNode * p;
-	BTreeNode * c = root;
-
-	// level 1
-	//if( c->leaf )
-		//cout << "L";
-	for( int i = 0; i < c->n; ++i ) {
-		cout << c->keys[i] << " ";
-	}
-	cout << endl;
-
-	p = c;
-
-	if( !p->leaf ) {
-	// level 2
-	for( int i = 0; i < p->n+1; ++i ) {
-		c = p->children[i];
-		//if( c->leaf )
-			//cout << "L";
-		cout << c->keys[0];
-		for( int j = 1; j < c->n; ++j ) {
-			cout << " " << c->keys[j];
-		}
-		cout << "|";
-	}
-	cout << endl;
-
-	if( !p->children[0]->leaf ) {
-	// level 3
-	for( int i = 0; i < p->n+1; ++i ) {
-		c = p->children[i];
-		for( int j = 0; j < c->n+1; ++j ) {
-			BTreeNode * c2 = c->children[j];
-			//if( c2->leaf )
-				//cout << "L";
-			cout << c2->keys[0];
-			for( int k = 1; k < c2->n; ++k ) {
-				cout << " " << c2->keys[k];
-			}
-			cout << "|";
-		}
-		cout << "|";
-	}
-	cout << endl;
-
-	// level 4
-	if( !p->children[0]->children[0]->leaf ) {
-	for( int i = 0; i < p->n+1; ++i ) {
-		c = p->children[i];
-		for( int j = 0; j < c->n+1; ++j ) {
-			BTreeNode * c2 = c->children[j];
-			for( int k = 0; k < c2->n+1; ++k ) {
-				BTreeNode * c3 = c2->children[k];
-				cout << c3->keys[0];
-				for( int l = 1; l < c3->n; ++l ) {
-					cout << " " << c3->keys[l];
-				}
-				cout << "|";
-			}
-			cout << "|";
-		}
-		cout << "|";
-	}
-	cout << endl;
-	}
-	}
-	}
+	print_btree1( root, 0 );
 }
 
 int main()
 {
-	BTreeNode * tr = new BTreeNode( 4 );
+	srand( time( NULL ) );
+	BTreeNode * tr = new BTreeNode( 2 );
 
-	for( int i = 0; i < 80; ++i ) {
-		btree_insert( tr, i );
-		//cout << "inserted " << i << endl;
-		//print_btree( tr );
-		//cout << "*****************" << endl;
+	for( int i = 1; i < 40; ++i ) {
+		int n = rand()%100 + 1;
+		btree_insert( tr, n );
+		cout << "inserted " << n << endl;
+		print_btree( tr );
+		cout << "*****************" << endl;
 	}
 
 	cout << "tree height: " << btree_height( tr ) << endl;
