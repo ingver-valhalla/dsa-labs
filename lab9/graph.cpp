@@ -73,6 +73,7 @@ public:
 	int     Hamiltonian(int v, int w, int Length, bool * Labelled, Graph & G);
 	Graph   HamiltonianPath(int From, int To);
 	void    Eulerian();
+	void    HamiltonianGraph();
 };
 //---------------------------------------------------------------------------
 class SGraph: public Graph {
@@ -495,20 +496,19 @@ int  Graph::Hamiltonian(int v, int w, int Length, bool * Labelled, Graph & G)
 //---------------------------------------------------------------------------
 void Graph::Eulerian()
 {
-
+	// iterating by rows
 	for( int i = 0; i < _Size-1; ++i ) {
-		// maxDegree is even
-		//int maxDegree = _Size%2 ? _Size-1 : _Size;
 		int curDegree = 0;
 		int val;
 
-		// count current degree
+		// Count current degree
 		for( int j = 0; j < i; ++j ) {
 			if( _m[i][j] != DBL_MAX ) {
 				++curDegree;
 			}
 		}
 
+		// Generate remaining
 		for( int j = i+1; j < _Size-2; ++j ) {
 			val = rand() % 2;
 			if( val ) {
@@ -517,19 +517,67 @@ void Graph::Eulerian()
 			}
 		}
 
+		// Special case for two last values in each row
+
 		if( i < _Size-2 ) {
+			// If not generated any edges yet make an edge.
+			// Current degree will be odd (will be useful after)
 			if( !curDegree ) {
 				_m[i][_Size-2] = _m[_Size-2][i] = 1;
 				++curDegree;
 			}
-			else if( (val = rand()%2) ){
+			// Else let the random decide
+			else if( (val = rand()%2) ) {
 				++curDegree;
 				_m[i][_Size-2] = _m[_Size-2][i] = 1;
 			}
 
 		}
+
+		// Check if degree is odd on last iteration and insert necessary edge
 		if(curDegree%2)
 			_m[i][_Size-1] = _m[_Size-1][i] = 1;
+	}
+}
+//---------------------------------------------------------------------------
+void Graph::HamiltonianGraph()
+{
+	// Dirac's condition
+	int half = (int)(_Size / 2.0 + 0.5);
+	cout << "Degree must be >= " << half << endl;
+	int i, j;
+	int curDegree;
+	int val;
+
+	// Iterate by rows
+	for( i = 0; i < _Size; ++i ) {
+		curDegree = 0;
+		// Count current degree
+		for( j = 0; j < i && (_Size-j-1 > half-curDegree); ++j ) {
+			if( _m[i][j] != DBL_MAX ) {
+				++curDegree;
+			}
+		}
+		// generate edges, excluding last column, and checking if Dirac's
+		// condition can be satisfied
+		for( ; j < _Size && (_Size-j-1 > half-curDegree); ++j ) {
+			if( i == j ) {
+				continue;
+			}
+			if( (val = rand() % 2) ) {
+				++curDegree;
+				_m[i][j] = _m[j][i] = val;
+			}
+		}
+		// Insert edges to satisfy Dirac's condition
+		if( i > 0 && j == i+1 ) {
+			_m[i][i-1] = _m[i-1][i] = 1;
+		}
+		for( ; j < _Size-1; ++j ) {
+			_m[i][j] = _m[j][i] = 1;
+		}
+		//cout << "i = " << i << endl;
+		//Print();
 	}
 }
 //---------------------------------------------------------------------------
@@ -650,10 +698,15 @@ int main(int argc, char* argv[])
 	////M.Print();
 	////G.Print();
 
-	Graph E(6);
-	E.Eulerian();
-	cout << "E :" << endl;
-	E.Print();
+	//Graph E(6);
+	//E.Eulerian();
+	//cout << "E :" << endl;
+	//E.Print();
+
+	Graph H(10);
+	H.HamiltonianGraph();
+	cout << "H :" << endl;
+	H.Print();
 
 	return 0;
 }
