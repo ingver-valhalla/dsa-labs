@@ -5,7 +5,6 @@
 
 #include <cstdlib>
 #include <ctime>
-//#include <iostream>
 #include <stack>
 #include <memory>
 
@@ -17,14 +16,14 @@ class RandBST {
 	class Node;
 
 	public:
+		class PreOrderIterator;
 
 		using pnode = std::shared_ptr<Node>;
-
-		class PreOrderIterator;
+		using iterator = PreOrderIterator;
 
 		RandBST();
 		RandBST(const RandBST&);
-		~RandBST();
+		~RandBST() {}
 
 		bool contains(const Item&) const;
 		bool is_empty() const;
@@ -36,6 +35,8 @@ class RandBST {
 		const Item& get_max() const;
 		void clear();
 
+		auto begin() const;
+		auto end() const { return it_end; };
 		auto traverse_pre_order() const;
 
 
@@ -51,7 +52,8 @@ class RandBST {
 				auto operator*();
 				auto operator++();
 				auto operator++(int);
-				auto end() { return ended; }
+				bool operator==(const iterator&) const;
+				bool operator!=(const iterator&) const;
 				auto get_level() { return level; }
 				auto get_size() { return node->size; }
 
@@ -61,7 +63,6 @@ class RandBST {
 				bool ended;
 				int level;
 		};
-
 
 		void print(std::ostream&) const;
 
@@ -87,14 +88,15 @@ class RandBST {
 			}
 		};
 
+		// root node
 		pnode root;
+		// end iterator
+		iterator it_end;
 
 		void insert(pnode& , const Item&);
 		void insert_to_root(pnode& , const Item &);
-
 		void remove(pnode& , const Item&);
 
-		void clear(pnode&);
 		void print(const pnode&, std::ostream&) const;
 
 		void rotate_left(pnode&);
@@ -111,18 +113,13 @@ RandBST<Item>::RandBST()
     : root(nullptr)
 {
 	std::srand(std::time(0));
+	it_end.ended = true;
 }
 
 template < typename Item >
 RandBST<Item>::RandBST(const RandBST& other)
 {
 	root.reset(new Node(*other.root));
-}
-
-template < typename Item >
-RandBST<Item>::~RandBST()
-{
-	//clear();
 }
 
 
@@ -259,24 +256,7 @@ const Item& RandBST<Item>::get_max() const
 template < typename Item >
 void RandBST<Item>::clear()
 {
-	//clear(root);
 	root.reset();
-}
-
-template < typename Item >
-void RandBST<Item>::clear(pnode& node)
-{
-	//if(node == nullptr) {
-		//return;
-	//}
-	//if(node->left)
-		//clear(node->left);
-
-	//if(node->right)
-		//clear(node->right);
-
-	//delete node;
-	//*pnode = nullptr;
 }
 
 template < typename Item >
@@ -370,11 +350,16 @@ void RandBST<Item>::fix_size(pnode& node)
 	node->size = get_size(node->left) + get_size(node->right) + 1;
 }
 
+template < typename Item >
+auto RandBST<Item>::begin() const
+{
+	return traverse_pre_order();
+}
 
 template < typename Item >
 auto RandBST<Item>::traverse_pre_order() const
 {
-	PreOrderIterator it;
+	iterator it;
 	it.node = root;
 	if(root == nullptr) {
 		it.ended = true;
@@ -426,6 +411,18 @@ template < typename Item >
 auto RandBST<Item>::PreOrderIterator::operator++(int)
 {
 	return operator++();
+}
+
+template < typename Item >
+bool RandBST<Item>::iterator::operator==(const iterator& it) const
+{
+	return (ended && it.ended) || node == it.node;
+}
+
+template < typename Item >
+bool RandBST<Item>::iterator::operator!=(const iterator& it) const
+{
+	return !operator==(it);
 }
 
 } // namespace BST

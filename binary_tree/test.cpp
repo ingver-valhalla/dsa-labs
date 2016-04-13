@@ -29,8 +29,6 @@ void print_int_tree( RandBST<int> & tr, ostream & os )
 
 		// item stores previous item
 		int item;
-		// level stores previous level in tree
-		//int level = it.get_level( );
 
 		// printing a root
 		os << "# " << *it; 
@@ -41,8 +39,7 @@ void print_int_tree( RandBST<int> & tr, ostream & os )
 		++it;
 
 		// traverse
-		for( ; !it.end( );
-			   /*level = it.get_level( ), */item = *it, ++it)
+		for( ; it != tr.end( ); item = *it, ++it)
 		{
 			if( *it < item ) {
 
@@ -51,13 +48,6 @@ void print_int_tree( RandBST<int> & tr, ostream & os )
 				cout << "(" << it.get_size() << ")";
 				cout << endl;
 			}
-			//else if( level >= it.get_level( ) ) {
-
-				//print_indent( it.get_level( ), ind_width, os );
-				//os << endl;
-				//print_indent( it.get_level( ), ind_width, os );
-				//os << ">" << *it [><< "(" << it.get_size() << ")" <]<< endl;
-			//}
 			else {
 
 				print_indent( it.get_level( ), ind_width, os );
@@ -79,7 +69,7 @@ int int_tree_height( const RandBST<int> & tr )
 	auto it = tr.traverse_pre_order();
 	int height = 0;
 
-	while( !it.end() ) {
+	while( it != tr.end() ) {
 		if( height < it.get_level() ) {
 			height = it.get_level();
 		}
@@ -113,6 +103,12 @@ int main()
 	cout << "the copy:\n";
 	print_int_tree( tr, cout );
 	cout << "\n";
+
+	// ranged-for loop test
+	for(auto item : tr) {
+		cout << item << " ";
+	}
+	cout << endl;
 
 	//cout << "DELETE" << endl;
 	//for( int i = 0; i < 40; ++i ) {
