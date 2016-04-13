@@ -5,8 +5,9 @@
 
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
+//#include <iostream>
 #include <stack>
+#include <memory>
 
 namespace BST {
 
@@ -17,23 +18,25 @@ class RandBST {
 
 	public:
 
+		using pnode = std::shared_ptr<Node>;
+
 		class PreOrderIterator;
 
-		RandBST( );
-		RandBST( const RandBST & );
-		~RandBST( );
+		RandBST();
+		RandBST(const RandBST&);
+		~RandBST();
 
-		bool contains( const Item & ) const;
-		bool is_empty( ) const;
+		bool contains(const Item&) const;
+		bool is_empty() const;
 
-		void insert( const Item & );
-		void remove( const Item & );
+		void insert(const Item&);
+		void remove(const Item&);
 
-		const Item & get_min( ) const;
-		const Item & get_max( ) const;
-		void clear( );
+		const Item& get_min() const;
+		const Item& get_max() const;
+		void clear();
 
-		PreOrderIterator traverse_pre_order( ) const;
+		auto traverse_pre_order() const;
 
 
 		class PreOrderIterator {
@@ -41,24 +44,26 @@ class RandBST {
 			friend RandBST;
 
 			public: 
-				PreOrderIterator( ) : ended( false ), level( 0 ) { }
+				PreOrderIterator()
+					: ended(false), level(0)
+				{ }
 
-				const Item & operator * ();
-				const PreOrderIterator & operator ++ ( );
-				const PreOrderIterator & operator ++ ( int );
-				bool end( ) { return ended; }
-				int get_level( ) { return level; }
-				int get_size() { return node->size; }
+				auto operator*();
+				auto operator++();
+				auto operator++(int);
+				auto end() { return ended; }
+				auto get_level() { return level; }
+				auto get_size() { return node->size; }
 
 			private: 
-				Node * node;
-				std::stack< std::pair<Node *, int> > st;
+				pnode node;
+				std::stack< std::pair<pnode, int> > st;
 				bool ended;
 				int level;
 		};
 
 
-		void print( std::ostream & ) const;
+		void print(std::ostream&) const;
 
 
 	private:
@@ -66,71 +71,72 @@ class RandBST {
 		struct Node {
 
 			Item data;
-			Node * left;
-			Node * right;
+			pnode left;
+			pnode right;
 			int size;
 
-			Node( const Item & d, Node * l, Node * r  )
-				: data( d ), left( l ), right( r ), size( 1 ) { }
-			Node( const Node & other ) 
-				: data( other.data ),
-				  size( other.size )
+			Node(const Item& d, pnode l, pnode r)
+				: data(d), left(l), right(r), size(1)
+			{ }
+			Node(const Node& other) 
+				: data(other.data),
+				  size(other.size)
 			{ 
-				left = other.left ? new Node( *other.left ) : nullptr;
-				right = other.right ? new Node( *other.right ) : nullptr;
+				left.reset(other.left ? new Node(*other.left) : nullptr);
+				right.reset(other.right ? new Node(*other.right) : nullptr);
 			}
 		};
 
-		Node * root;
+		pnode root;
 
-		void insert( Node ** , const Item & );
-		void insert_to_root( Node **, const Item & );
+		void insert(pnode& , const Item&);
+		void insert_to_root(pnode& , const Item &);
 
-		void remove( Node ** , const Item & );
+		void remove(pnode& , const Item&);
 
-		void clear( Node ** );
-		void print( Node *, std::ostream & ) const;
+		void clear(pnode&);
+		void print(const pnode&, std::ostream&) const;
 
-		void rotate_left( Node ** );
-		void rotate_right( Node ** );
+		void rotate_left(pnode&);
+		void rotate_right(pnode&);
 
-		Node * join( Node *, Node * );
+		pnode join(pnode&, pnode&);
 
-		int get_size( Node * );
-		void fix_size( Node * );
+		int get_size(const pnode&);
+		void fix_size(pnode&);
 };
 
 template < typename Item >
-RandBST<Item>::RandBST( )
-    : root( nullptr )
+RandBST<Item>::RandBST()
+    : root(nullptr)
 {
-	std::srand( std::time( 0 ) );
+	std::srand(std::time(0));
 }
 
 template < typename Item >
-RandBST<Item>::RandBST( const RandBST & other )
+RandBST<Item>::RandBST(const RandBST& other)
 {
-	root = new Node( *other.root );
+	root.reset(new Node(*other.root));
 }
 
 template < typename Item >
-RandBST<Item>::~RandBST( )
+RandBST<Item>::~RandBST()
 {
-	clear();
+	//clear();
 }
 
 
 template < typename Item >
-bool RandBST<Item>::contains( const Item & to_find ) const
+bool RandBST<Item>::contains(const Item& to_find) const
 {
-	Node *p = root;
+	pnode p = root;
 
-	while( p ) {
+	while(p) {
 
-		if( to_find < p->data ) {
+		if(to_find < p->data) {
 			p = p->left;
 		}
-		else if(  to_find > p->data ) {
+		else if( to_find > p->data) {
 			p = p->right;
 		}
 		else {
@@ -142,65 +148,61 @@ bool RandBST<Item>::contains( const Item & to_find ) const
 }
 
 template < typename Item >
-bool RandBST<Item>::is_empty( ) const
+bool RandBST<Item>::is_empty() const
 {
 	return root == nullptr;
 }
 
 template < typename Item >
-void RandBST<Item>::insert( const Item & to_insert )
+void RandBST<Item>::insert(const Item& to_insert)
 {
-	if( !contains( to_insert ) )
-		insert( &root, to_insert );
+	if( !contains(to_insert) )
+		insert(root, to_insert);
 }
 
 template < typename Item >
-void RandBST<Item>::insert( Node ** pnode, const Item & to_insert )
+void RandBST<Item>::insert(pnode& node, const Item& to_insert)
 {
-	Node * node = *pnode;
-
-	if( node == nullptr ) {
+	if(node == nullptr) {
 		//std::cout << "inserting to leaf" << std::endl;
-		insert_to_root( pnode, to_insert );
+		insert_to_root(node, to_insert);
 	}
-	else if( std::rand() < RAND_MAX / (node->size+1) ) {
+	else if(std::rand() < RAND_MAX / (node->size+1)) {
 		//std::cout << "inserting to root" << std::endl;
-		insert_to_root( pnode, to_insert );
+		insert_to_root(node, to_insert);
 	}
-	else if( to_insert < node->data ) {
+	else if(to_insert < node->data) {
 		//std::cout << "skipping " << node->data << std::endl;
-		insert( &node->left, to_insert );
-		fix_size( node );
+		insert(node->left, to_insert);
+		fix_size(node);
 	}
 	else {
 		//std::cout << "skipping " << node->data << std::endl;
-		insert( &node->right, to_insert );
-		fix_size( node );
+		insert(node->right, to_insert);
+		fix_size(node);
 	}
 }
 
 
 template < typename Item >
-void RandBST<Item>::insert_to_root( Node ** pnode, const Item & to_insert )
+void RandBST<Item>::insert_to_root(pnode& node, const Item& to_insert)
 {
-	Node * node = *pnode;
-
-	if( node == nullptr ) {
-		*pnode = new Node( to_insert, nullptr, nullptr );
+	if(node == nullptr) {
+		node.reset(new Node(to_insert, nullptr, nullptr));
 
 		//print( std::cout );
 		//std::cout << std::endl;
 	}
-	else if( to_insert < node->data ) {
-		insert_to_root( &node->left, to_insert );
-		rotate_right( pnode );
+	else if(to_insert < node->data) {
+		insert_to_root(node->left, to_insert);
+		rotate_right(node);
 
 		//print( std::cout );
 		//std::cout << std::endl;
 	}
-	else if( to_insert > node->data ) {
-		insert_to_root( &node->right, to_insert );
-		rotate_left( pnode );
+	else if(to_insert > node->data) {
+		insert_to_root(node->right, to_insert);
+		rotate_left(node);
 
 		//print( std::cout );
 		//std::cout << std::endl;
@@ -209,226 +211,208 @@ void RandBST<Item>::insert_to_root( Node ** pnode, const Item & to_insert )
 
 
 template < typename Item >
-void RandBST<Item>::remove( const Item & to_remove )
+void RandBST<Item>::remove(const Item& to_remove)
 {
-	remove( &root, to_remove );
+	remove(root, to_remove);
 }
 
 
 template < typename Item >
-void RandBST<Item>::remove( Node ** pnode, const Item & to_remove )
+void RandBST<Item>::remove(pnode& node, const Item& to_remove)
 {
-	if( pnode == nullptr )
-		return;
-
-	Node * node = *pnode;
-	if( node == nullptr ) {
+	if(node == nullptr) {
 		return;
 	}
-	if( to_remove < node->data ) {
-		remove( &(node->left), to_remove );
-		fix_size( node );
+	if(to_remove < node->data) {
+		remove(node->left, to_remove);
+		fix_size(node);
 	}
-	else if( to_remove > node->data ) {
-		remove( &(node->right), to_remove );
-		fix_size( node );
+	else if(to_remove > node->data) {
+		remove(node->right, to_remove);
+		fix_size(node);
 	}
 	else {
-		Node * t = join( node->left, node->right );
-		*pnode = t;
-		delete node;
+		node = join(node->left, node->right);
 	}
 }
 
 template < typename Item >
-const Item & RandBST<Item>::get_min( ) const
+const Item& RandBST<Item>::get_min() const
 {
-	Node *p = root;
-	Node *min = nullptr;
+	pnode min = nullptr;
 
-	for( ; p; min = p, p = p->left );
+	for(pnode p = root; p; min = p, p = p->left);
 
 	return min->data;
 }
 
 template < typename Item >
-const Item & RandBST<Item>::get_max( ) const
+const Item& RandBST<Item>::get_max() const
 {
-	Node *p = root;
-	Node *max = nullptr;
+	pnode max = nullptr;
 
-	for( ; p; max = p, p = p->right );
+	for(pnode p = root; p; max = p, p = p->right);
 
 	return max->data;
 }
 
 template < typename Item >
-void RandBST<Item>::clear( )
+void RandBST<Item>::clear()
 {
-	clear( &root );
+	//clear(root);
+	root.reset();
 }
 
 template < typename Item >
-void RandBST<Item>::clear( Node ** pnode )
+void RandBST<Item>::clear(pnode& node)
 {
-	Node * node = *pnode;
+	//if(node == nullptr) {
+		//return;
+	//}
+	//if(node->left)
+		//clear(node->left);
 
-	if( node == nullptr ) {
-		return;
-	}
-	if( node->left )
-		clear( &node->left );
+	//if(node->right)
+		//clear(node->right);
 
-	if( node->right )
-		clear( &node->right );
-
-	delete node;
-	*pnode = nullptr;
+	//delete node;
+	//*pnode = nullptr;
 }
 
 template < typename Item >
-void RandBST<Item>::print( std::ostream & os ) const
+void RandBST<Item>::print(std::ostream& os) const
 {
 	os << "# ";
-	print( root, os );
+	print(root, os);
 }
 
 template < typename Item >
-void RandBST<Item>::print( Node * node, std::ostream & os ) const
+void RandBST<Item>::print(const pnode& node, std::ostream& os) const
 {
-	if( node == nullptr ) {
+	if(node == nullptr) {
 		os << "* ";
 		return;
 	}
 
 	os << node->data;
 	os << " <";
-	print( node->left, os );
+	print(node->left, os);
 	os << " >";
-	print( node->right, os );
+	print(node->right, os);
 }
 
 
 template < typename Item >
-void RandBST<Item>::rotate_left( Node ** pnode )
+void RandBST<Item>::rotate_left(pnode& node)
 {
-	Node * node = *pnode;
-
-	Node * t = node->right;
-
-	if( t != nullptr ) {
+	pnode t = node->right;
+	if(t != nullptr) {
 		node->right = t->left;
 		t->left = node;
 		//t->size = node->size;
 
-		fix_size( node );
-		fix_size( t );
+		fix_size(node);
+		fix_size(t);
 
-		*pnode = t;
+		node = t;
 	}
 }
 
 
 template < typename Item >
-void RandBST<Item>::rotate_right( Node ** pnode )
+void RandBST<Item>::rotate_right(pnode& node)
 {
-	Node * node = *pnode;
-
-	Node * t = node->left;
-
-	if( t != nullptr ) {
+	pnode t = node->left;
+	if(t != nullptr) {
 		node->left = t->right;
 		t->right = node;
 		//t->size = node->size;
 
-		fix_size( node );
-		fix_size( t );
+		fix_size(node);
+		fix_size(t);
 
-		*pnode = t;
+		node = t;
 	}
 }
 
 
 template < typename Item >
-typename RandBST<Item>::Node *
-RandBST<Item>::join( Node * a, Node * b )
+typename RandBST<Item>::pnode
+RandBST<Item>::join(pnode& a, pnode& b)
 {
-	if( a == nullptr ) return b;
-	if( b == nullptr ) return a;
+	if(a == nullptr) return b;
+	if(b == nullptr) return a;
 
-	if( rand() / (RAND_MAX / (a->size + b->size) + 1) < a->size ) {
+	if(rand() / (RAND_MAX / (a->size + b->size) + 1) < a->size) {
 
-		a->right = join( a->right, b );
-		fix_size( a );
+		a->right = join(a->right, b);
+		fix_size(a);
 		return a;
 	}
 	else {
 
-		b->left = join( a, b->left );
-		fix_size( b );
+		b->left = join(a, b->left);
+		fix_size(b);
 		return b;
 	}
 }
 
 
 template < typename Item >
-int RandBST<Item>::get_size( Node * node )
+int RandBST<Item>::get_size(const pnode& node)
 {
 	return node ? node->size : 0;
 }
 
 template < typename Item >
-void RandBST<Item>::fix_size( Node * node )
+void RandBST<Item>::fix_size(pnode& node)
 {
-	node->size = get_size( node->left ) + get_size( node->right ) + 1;
+	node->size = get_size(node->left) + get_size(node->right) + 1;
 }
 
 
 template < typename Item >
-typename RandBST<Item>::PreOrderIterator
-RandBST<Item>::traverse_pre_order( ) const
+auto RandBST<Item>::traverse_pre_order() const
 {
 	PreOrderIterator it;
 	it.node = root;
-	if( root == nullptr ) {
+	if(root == nullptr) {
 		it.ended = true;
 	}
 	return it;
 }
 
 template < typename Item >
-const Item &
-RandBST<Item>::PreOrderIterator::operator * ( )
+auto RandBST<Item>::PreOrderIterator::operator*()
 {
 	return node->data;
 }
 
 template < typename Item >
-const typename RandBST<Item>::PreOrderIterator &
-RandBST<Item>::PreOrderIterator::operator ++ ( )
+auto RandBST<Item>::PreOrderIterator::operator++()
 {
-	if( !ended ) {
+	if(!ended) {
 
-		if( node->left != nullptr ) {
-			st.push( std::make_pair( node->right, level+1 ) );
+		if(node->left != nullptr) {
+			st.push(std::make_pair(node->right, level+1));
 			node = node->left;
 			++level;
 		}
-		else if( node->right != nullptr ) {
+		else if(node->right != nullptr) {
 			node = node->right;
 			++level;
 		}
 		else {
 
-			while( !st.empty( ) && st.top( ).first == nullptr ) {
-				level = st.top( ).second;
-				st.pop( );
+			while(!st.empty() && st.top().first == nullptr) {
+				level = st.top().second;
+				st.pop();
 			}
 
-			if( !st.empty( ) ) {
-				node = st.top( ).first;
-				level = st.top( ).second;
-				st.pop( );
+			if(!st.empty()) {
+				node = st.top().first;
+				level = st.top().second;
+				st.pop();
 			}
 			else {
 				ended = true;
@@ -439,10 +423,9 @@ RandBST<Item>::PreOrderIterator::operator ++ ( )
 }
 
 template < typename Item >
-const typename RandBST<Item>::PreOrderIterator &
-RandBST<Item>::PreOrderIterator::operator ++ ( int )
+auto RandBST<Item>::PreOrderIterator::operator++(int)
 {
-	return operator ++ ( );
+	return operator++();
 }
 
 } // namespace BST

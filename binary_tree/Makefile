@@ -1,5 +1,5 @@
 CXX=g++
-CFLAGS=-Wall -g -O3 -std=c++11
+CFLAGS=-Wall -g -O3 -std=c++1y
 
 test: test.o
 	$(CXX) $(CFLAGS) -o test test.o
