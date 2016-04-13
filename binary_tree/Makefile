@@ -1,11 +1,11 @@
 CXX=g++
 CFLAGS=-Wall -g -O3 -std=c++11
 
-main: main.o
-	$(CXX) $(CFLAGS) -o main main.o
+test: test.o
+	$(CXX) $(CFLAGS) -o test test.o
 
-main.o: AbstractBST.h RandomizedBST.h RandomizedBST.hpp main.cpp
-	$(CXX) $(CFLAGS) -c main.cpp
+test.o: rand_bst.hpp test.cpp
+	$(CXX) $(CFLAGS) -c test.cpp
 
 clean:
-	rm *.o main
+	rm *.o test
