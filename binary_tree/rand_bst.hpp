@@ -60,7 +60,9 @@ class RandBST {
 
 		void print( std::ostream & ) const;
 
+
 	private:
+
 		struct Node {
 
 			Item data;
@@ -100,7 +102,7 @@ class RandBST {
 
 template < typename Item >
 RandBST<Item>::RandBST( )
-    : root( NULL )
+    : root( nullptr )
 {
 	std::srand( std::time( 0 ) );
 }
@@ -142,7 +144,7 @@ bool RandBST<Item>::contains( const Item & to_find ) const
 template < typename Item >
 bool RandBST<Item>::is_empty( ) const
 {
-	return root == NULL;
+	return root == nullptr;
 }
 
 template < typename Item >
@@ -157,7 +159,7 @@ void RandBST<Item>::insert( Node ** pnode, const Item & to_insert )
 {
 	Node * node = *pnode;
 
-	if( node == NULL ) {
+	if( node == nullptr ) {
 		//std::cout << "inserting to leaf" << std::endl;
 		insert_to_root( pnode, to_insert );
 	}
@@ -183,8 +185,8 @@ void RandBST<Item>::insert_to_root( Node ** pnode, const Item & to_insert )
 {
 	Node * node = *pnode;
 
-	if( node == NULL ) {
-		*pnode = new Node( to_insert, NULL, NULL );
+	if( node == nullptr ) {
+		*pnode = new Node( to_insert, nullptr, nullptr );
 
 		//print( std::cout );
 		//std::cout << std::endl;
@@ -216,11 +218,11 @@ void RandBST<Item>::remove( const Item & to_remove )
 template < typename Item >
 void RandBST<Item>::remove( Node ** pnode, const Item & to_remove )
 {
-	if( pnode == NULL )
+	if( pnode == nullptr )
 		return;
 
 	Node * node = *pnode;
-	if( node == NULL ) {
+	if( node == nullptr ) {
 		return;
 	}
 	if( to_remove < node->data ) {
@@ -242,7 +244,7 @@ template < typename Item >
 const Item & RandBST<Item>::get_min( ) const
 {
 	Node *p = root;
-	Node *min = NULL;
+	Node *min = nullptr;
 
 	for( ; p; min = p, p = p->left );
 
@@ -253,7 +255,7 @@ template < typename Item >
 const Item & RandBST<Item>::get_max( ) const
 {
 	Node *p = root;
-	Node *max = NULL;
+	Node *max = nullptr;
 
 	for( ; p; max = p, p = p->right );
 
@@ -271,7 +273,7 @@ void RandBST<Item>::clear( Node ** pnode )
 {
 	Node * node = *pnode;
 
-	if( node == NULL ) {
+	if( node == nullptr ) {
 		return;
 	}
 	if( node->left )
@@ -281,7 +283,7 @@ void RandBST<Item>::clear( Node ** pnode )
 		clear( &node->right );
 
 	delete node;
-	*pnode = NULL;
+	*pnode = nullptr;
 }
 
 template < typename Item >
@@ -294,7 +296,7 @@ void RandBST<Item>::print( std::ostream & os ) const
 template < typename Item >
 void RandBST<Item>::print( Node * node, std::ostream & os ) const
 {
-	if( node == NULL ) {
+	if( node == nullptr ) {
 		os << "* ";
 		return;
 	}
@@ -314,7 +316,7 @@ void RandBST<Item>::rotate_left( Node ** pnode )
 
 	Node * t = node->right;
 
-	if( t != NULL ) {
+	if( t != nullptr ) {
 		node->right = t->left;
 		t->left = node;
 		//t->size = node->size;
@@ -334,7 +336,7 @@ void RandBST<Item>::rotate_right( Node ** pnode )
 
 	Node * t = node->left;
 
-	if( t != NULL ) {
+	if( t != nullptr ) {
 		node->left = t->right;
 		t->right = node;
 		//t->size = node->size;
@@ -351,8 +353,8 @@ template < typename Item >
 typename RandBST<Item>::Node *
 RandBST<Item>::join( Node * a, Node * b )
 {
-	if( a == NULL ) return b;
-	if( b == NULL ) return a;
+	if( a == nullptr ) return b;
+	if( b == nullptr ) return a;
 
 	if( rand() / (RAND_MAX / (a->size + b->size) + 1) < a->size ) {
 
@@ -388,7 +390,7 @@ RandBST<Item>::traverse_pre_order( ) const
 {
 	PreOrderIterator it;
 	it.node = root;
-	if( root == NULL ) {
+	if( root == nullptr ) {
 		it.ended = true;
 	}
 	return it;
@@ -407,18 +409,18 @@ RandBST<Item>::PreOrderIterator::operator ++ ( )
 {
 	if( !ended ) {
 
-		if( node->left != NULL ) {
+		if( node->left != nullptr ) {
 			st.push( std::make_pair( node->right, level+1 ) );
 			node = node->left;
 			++level;
 		}
-		else if( node->right != NULL ) {
+		else if( node->right != nullptr ) {
 			node = node->right;
 			++level;
 		}
 		else {
 
-			while( !st.empty( ) && st.top( ).first == NULL ) {
+			while( !st.empty( ) && st.top( ).first == nullptr ) {
 				level = st.top( ).second;
 				st.pop( );
 			}
