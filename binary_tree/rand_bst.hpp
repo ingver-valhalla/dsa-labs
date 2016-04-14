@@ -161,20 +161,16 @@ template < typename Item >
 void RandBST<Item>::insert(pnode& node, const Item& to_insert)
 {
 	if(node == nullptr) {
-		//std::cout << "inserting to leaf" << std::endl;
 		insert_to_root(node, to_insert);
 	}
 	else if(std::rand() < RAND_MAX / (node->size+1)) {
-		//std::cout << "inserting to root" << std::endl;
 		insert_to_root(node, to_insert);
 	}
 	else if(to_insert < node->data) {
-		//std::cout << "skipping " << node->data << std::endl;
 		insert(node->left, to_insert);
 		fix_size(node);
 	}
 	else {
-		//std::cout << "skipping " << node->data << std::endl;
 		insert(node->right, to_insert);
 		fix_size(node);
 	}
@@ -186,23 +182,14 @@ void RandBST<Item>::insert_to_root(pnode& node, const Item& to_insert)
 {
 	if(node == nullptr) {
 		node.reset(new Node(to_insert, nullptr, nullptr));
-
-		//print( std::cout );
-		//std::cout << std::endl;
 	}
 	else if(to_insert < node->data) {
 		insert_to_root(node->left, to_insert);
 		rotate_right(node);
-
-		//print( std::cout );
-		//std::cout << std::endl;
 	}
 	else if(to_insert > node->data) {
 		insert_to_root(node->right, to_insert);
 		rotate_left(node);
-
-		//print( std::cout );
-		//std::cout << std::endl;
 	}
 }
 
@@ -289,7 +276,6 @@ void RandBST<Item>::rotate_left(pnode& node)
 	if(t != nullptr) {
 		node->right = t->left;
 		t->left = node;
-		//t->size = node->size;
 
 		fix_size(node);
 		fix_size(t);
@@ -306,7 +292,6 @@ void RandBST<Item>::rotate_right(pnode& node)
 	if(t != nullptr) {
 		node->left = t->right;
 		t->right = node;
-		//t->size = node->size;
 
 		fix_size(node);
 		fix_size(t);
