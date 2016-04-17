@@ -23,6 +23,7 @@ public:
 	bool Empty(void) {return _Head?false:true;}
 	virtual void Push(int V) = 0;
 	virtual int  Pop(void);
+	virtual void Print();
 	~Cont();
 };
 //---------------------------------------------------------------------------
@@ -76,10 +77,11 @@ public:
 
 	void    EulerianGraph();
 	bool    isEulerian();
+	bool    isConnected();
 	void    HamiltonianGraph();
 
 	void PrintEulerianCycle();
-	void FindEulerianCycle(int v, Cont& cont);
+	void Hierholzer(int v, Cont& cont);
 
 };
 //---------------------------------------------------------------------------
@@ -321,7 +323,10 @@ void   Graph::Print(void)
 				printf("%7.2lf",_m[i][j]);
 			else
 				printf("     --");
-			printf("\n");
+		printf("\n");
+		for(int j = 0; j < 50; ++j)
+			putchar('-');
+		printf("\n");
 	}
 	printf("\n");
 }
@@ -507,7 +512,7 @@ Graph   Graph::HamiltonianPath(int From, int To)
 	bool * Labelled = new bool[_Size];
 	for (int i = 0; i < _Size; i++) Labelled[i] = false;
 	Graph G(_Size);
-	int f = Hamiltonian(From,To, _Size - 1 ,Labelled, G);
+	Hamiltonian(From,To, _Size - 1 ,Labelled, G);
 	delete [] Labelled;
 	return G;
 }
@@ -649,14 +654,18 @@ void Graph::EulerianGraph()
 //---------------------------------------------------------------------------
 bool Graph::isEulerian()
 {
+	if(!isConnected())
+		return false;
+
+	// check eulerness
 	int oddVerteces = 0;
-	bool hasEdges = false;
+	bool has_edges = false;
 	for(int i = 0; i < _Size; ++i) {
 		int degree = 0;
 		for(int j = 0; j < _Size; ++j) {
 			if(_m[i][j] == 1) {
 				++degree;
-				hasEdges = true;
+				has_edges = true;
 			}
 		}
 		if(degree%2 != 0) {
@@ -668,8 +677,46 @@ bool Graph::isEulerian()
 			}
 		}
 	}
-	if(!hasEdges)
+	if(!has_edges) {
 		return false;
+	}
+	return true;
+}
+//---------------------------------------------------------------------------
+bool Graph::isConnected()
+{
+	// check connectivity
+	int* marks = new int[_Size]();
+	marks[0] = 1; // reachable
+
+	int i = 0, j = 0;
+	for(int v = 0; v < _Size; ++v) {
+		bool has_reachable = false;
+		for(i = 0; i < _Size; ++i) {
+			if(marks[i] == 1) {
+				has_reachable = true;
+				break;
+			}
+		}
+		if(!has_reachable)
+			break;
+
+		for(j = 0; j < _Size; ++j) {
+			if(_m[i][j] == 1 && marks[j] == 0) {
+				marks[j] = 1; // mark all neighbors of i as reachable
+			}
+		}
+		marks[i] = 2; // vertex i is processed
+	}
+	// check if there are unprocessed verteces
+	for(i = 0; i < _Size; ++i) {
+		if(marks[i] == 0) {
+			delete[] marks;
+			return false;
+		}
+	}
+
+	delete[] marks;
 	return true;
 }
 //---------------------------------------------------------------------------
@@ -709,8 +756,6 @@ void Graph::HamiltonianGraph()
 		for( ; j < _Size-1; ++j ) {
 			_m[i][j] = _m[j][i] = 1;
 		}
-		//cout << "i = " << i << endl;
-		//Print();
 	}
 }
 
@@ -720,74 +765,81 @@ void Graph::PrintEulerianCycle()
 		cout << "Graph is not eulerian\n";
 		return;
 	}
-	CStack cont = CStack();
+	
+	CQueue answer = CQueue();
 	Graph g(*this);
 
-	g.FindEulerianCycle(0, cont);
+	answer.Push(0);
+	g.Hierholzer(0, answer);
+	for(int i = 0; i < g._Size; ++i) {
+		for(int j = 0; j < g._Size; ++j) {
+			if(g._m[i][j] == 1) {
+				g.Print();
+				throw "Remained edges";
+			}
+		}
+	}
 
 	// printing
 	cout << "Eulerian cycle:\n";
 	int v;
-	while((v = cont.Pop()) != -1) {
+	while((v = answer.Pop()) != -1) {
 		cout << v << " ";
 	}
 	cout << endl;
 	cout << "--------------" << endl;
 }
 
-void Graph::FindEulerianCycle(int v, Cont& cont)
+void Graph::Hierholzer(int v, Cont& answer)
 {
 	if(v < 0 || v > _Size) {
 		throw "invalid vertex";
 	}
-	for(int j = 0; j < _Size; ++j) {
-		if(_m[v][j] == 1) {
-			DeleteEdge(v, j);
-			DeleteEdge(j, v);
-			FindEulerianCycle(j, cont);
-		}
+
+	CQueue cycles = CQueue();
+	int p = v;
+
+	do {
+		for(int i = 0; i < _Size; ++i)
+			if(_m[p][i] == 1) {
+				cycles.Push(i);
+				DeleteEdge(p, i);
+				DeleteEdge(i, p);
+				p = i;
+				break;
+			}
+	} while(v != p);
+
+	while((p = cycles.Pop()) != -1) {
+		answer.Push(p);
+		Hierholzer(p, answer);
 	}
-	cont.Push(v);
+}
+
+void Cont::Print()
+{
+	Item *p = _Head;
+	while(p != NULL) {
+		cout << p->D << " ";
+		p = p->Next;
+	}
 }
 
 int main(int argc, char* argv[])
 {
 	srand(time(NULL));
-	//cout << "DBL_MAX = " << DBL_MAX << endl;
-	//Graph A(5);
-	//A.Random(1, 1);
-	////Matrix M(A.VertexCount());
-	////Graph F(A.Floyd(M));
-	//Graph G(A.Kruskal());
-	//Graph H(A.HamiltonianPath(0,1));
-	//cout << "A :" << endl;
-	//A.Print();
-	//cout << "Kruskal of A : " << endl;
-	//G.Print();
-	//cout << "Hamiltonian path in A : " << endl;
-	//H.Print();
-	////F.Print();
-	////M.PrintFloydPaths();
-	////M.Print();
-	////G.Print();
 
 	for(int i = 0; i < 100; ++i) {
 		Graph E(6);
 		E.EulerianGraph();
 		cout << "E :" << endl;
 		E.Print();
-		if(E.isEulerian()) {
+		try {
 			E.PrintEulerianCycle();
+		} catch(const char *e) {
+			cout << e << '\n';
 		}
 		getchar();
 	}
-
-
-	//Graph H(10);
-	//H.HamiltonianGraph();
-	//cout << "H :" << endl;
-	//H.Print();
-
-	//system("sleep 1");
 	return 0;
 }
