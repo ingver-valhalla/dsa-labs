@@ -78,10 +78,17 @@ public:
 	void    EulerianGraph();
 	bool    isEulerian();
 	bool    isConnected();
-	void    HamiltonianGraph();
+	void    Hierholzer(int v, Cont& cont);
+	void    PrintEulerianCycle();
 
-	void PrintEulerianCycle();
-	void Hierholzer(int v, Cont& cont);
+	void    HamiltonianGraph();
+	bool    isHamiltonian();
+	void    PrintHamiltonianCycle();
+	bool    FindHamiltonianCycle(int from, CStack& answer);
+private:
+	bool    FindHamiltonianCycleRecur(int from, int to, int len, CStack& answer, bool* marks);
+
+
 
 };
 //---------------------------------------------------------------------------
@@ -324,8 +331,8 @@ void   Graph::Print(void)
 			else
 				printf("     --");
 		printf("\n");
-		for(int j = 0; j < 50; ++j)
-			putchar('-');
+		for(int j = 0; j < _Size; ++j)
+			printf("-------");
 		printf("\n");
 	}
 	printf("\n");
@@ -724,7 +731,7 @@ void Graph::HamiltonianGraph()
 {
 	// Dirac's condition
 	int half = (int)(_Size / 2.0 + 0.5);
-	cout << "Degree must be >= " << half << endl;
+	//cout << "Degree must be >= " << half << endl;
 	int i, j;
 	int curDegree;
 	int val;
@@ -740,7 +747,7 @@ void Graph::HamiltonianGraph()
 		}
 		// generate edges, excluding last column, and checking if Dirac's
 		// condition can be satisfied
-		for( ; j < _Size && (_Size-j-1 > half-curDegree); ++j ) {
+		for( ; j < _Size && (_Size-j-2 > half-curDegree); ++j ) {
 			if( i == j ) {
 				continue;
 			}
@@ -750,15 +757,35 @@ void Graph::HamiltonianGraph()
 			}
 		}
 		// Insert edges to satisfy Dirac's condition
-		if( i > 0 && j == i+1 ) {
-			_m[i][i-1] = _m[i-1][i] = 1;
-		}
 		for( ; j < _Size-1; ++j ) {
+			if(i == j)
+				continue;
 			_m[i][j] = _m[j][i] = 1;
 		}
 	}
 }
-
+//---------------------------------------------------------------------------
+bool Graph::isHamiltonian()
+{
+	double degree = 0;
+	for(int i = 0; i < _Size; ++i) {
+		for(int j = 0; j < _Size; ++j) {
+			if(i == j && _m[i][j] == 1) {
+				cout << "vertex can't be connected with itself\n";
+				return false;
+			}
+			if(_m[i][j] == 1)
+				++degree;
+		}
+		double half = _Size/2.0;
+		if(degree < half) {
+			cout << "degree must be not lesser than " << half << endl;
+			return false;
+		}
+	}
+	return true;
+}
+//---------------------------------------------------------------------------
 void Graph::PrintEulerianCycle()
 {
 	if(!isEulerian()) {
@@ -789,7 +816,7 @@ void Graph::PrintEulerianCycle()
 	cout << endl;
 	cout << "--------------" << endl;
 }
-
+//---------------------------------------------------------------------------
 void Graph::Hierholzer(int v, Cont& answer)
 {
 	if(v < 0 || v > _Size) {
@@ -815,7 +842,100 @@ void Graph::Hierholzer(int v, Cont& answer)
 		Hierholzer(p, answer);
 	}
 }
+//---------------------------------------------------------------------------
+void Graph::PrintHamiltonianCycle()
+{
+	if(!isHamiltonian()) {
+		cout << "Graph is not hamiltonian\n";
+		return;
+	}
 
+	CStack answer = CStack();
+	if(!FindHamiltonianCycle(0, answer)) {
+		cout << "There is no hamiltonian cycle\n";
+		return;
+	}
+
+	// printing
+	cout << "Hamiltonian cycle\n";
+	int p = -1;
+	while((p = answer.Pop()) != -1) {
+		cout << p << " ";
+	}
+	cout << endl;
+	cout << "--------------" << endl;
+}
+//---------------------------------------------------------------------------
+bool Graph::FindHamiltonianCycle(int from, CStack& answer)
+{
+	if(from < 0 || from > _Size) {
+		throw "invalid vertex";
+	}
+
+	bool marks[_Size] = {false};
+	//cout << "FindHamiltonianCycle from " << from << ":\n";
+	//cout << "answer: ";
+	//answer.Print();
+	//cout << endl;
+
+	//cout << "marks: ";
+	//for(int i = 0; i < _Size; ++i) {
+		//cout << marks[i] << " ";
+	//}
+	//cout << endl;
+	
+	answer.Push(from);
+	marks[from] = true;
+
+	for(int v = 0; v < _Size; ++v) {
+		if(_m[from][v] == 1 && !marks[v]
+		   && FindHamiltonianCycleRecur(v, from, _Size-1, answer, marks))
+		{
+			answer.Push(from);
+			return true;
+		}
+	}
+
+	answer.Pop();
+	return false;
+}
+//---------------------------------------------------------------------------
+bool Graph::FindHamiltonianCycleRecur(int from, int to, int len, CStack& answer, bool* marks)
+{
+	if(from < 0 || from > _Size || to < 0 || to > _Size) {
+		throw "invalid vertex";
+	}
+
+	//cout << "FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...\n";
+	//cout << "answer: ";
+	//answer.Print();
+	//cout << "\nmarks: ";
+	//for(int i = 0; i < _Size; ++i) {
+		//cout << marks[i] << " ";
+	//}
+	//cout << endl;
+
+	answer.Push(from);
+	marks[from] = true;
+	for(int v = 0; v < _Size; ++v) {
+		if(_m[from][v] == 1 && !marks[v]
+		   && FindHamiltonianCycleRecur(v, to, len-1, answer, marks))
+		{
+			//cout << "<<<+FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...\n";
+			return true;
+		}
+	}
+	if(len == 1 && _m[from][to] == 1) {
+		//cout << "<<<+FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...(last)\n";
+		return true;
+	}
+	answer.Pop();
+	marks[from] = false;
+	//cout << "<<<-FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...(last)\n";
+	return false;
+
+}
+//---------------------------------------------------------------------------
 void Cont::Print()
 {
 	Item *p = _Head;
@@ -824,22 +944,45 @@ void Cont::Print()
 		p = p->Next;
 	}
 }
+//---------------------------------------------------------------------------
 
 int main(int argc, char* argv[])
 {
-	srand(time(NULL));
+	//srand(time(NULL));
 
-	for(int i = 0; i < 100; ++i) {
-		Graph E(6);
-		E.EulerianGraph();
-		cout << "E :" << endl;
-		E.Print();
-		try {
-			E.PrintEulerianCycle();
-		} catch(const char *e) {
-			cout << e << '\n';
+	//for(int i = 0; i < 100; ++i) {
+		//Graph E(6);
+		//E.EulerianGraph();
+		//cout << "E :" << endl;
+		//E.Print();
+		//try {
+			//E.PrintEulerianCycle();
+		//} catch(const char *e) {
+			//cout << e << endl;
+		//}
+		//getchar();
+	//}
+
+	while(1) {
+		Graph H(8);
+		H.HamiltonianGraph();
+		cout << "H :" << endl;
+		H.Print();
+		if(!H.isHamiltonian()) {
+			cout << "NOT HAMILTONIAN\n";
+			exit(1);
 		}
+		else
+			cout << "Hamiltonian\n\n";
+		try {
+		H.PrintHamiltonianCycle();
+		}
+		catch(const char *e) {
+			cout << e << endl;
+		}
+		cout << "\n";
 		getchar();
 	}
+
 	return 0;
 }
