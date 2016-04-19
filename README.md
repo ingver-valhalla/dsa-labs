@@ -1,2 +1,2 @@
-# data-structures-and-algorithms
-Lab works for DSaA discipline
+# dsa-labs
+Lab works for data structures and algorithms discipline
