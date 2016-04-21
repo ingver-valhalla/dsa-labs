@@ -101,6 +101,7 @@ Dir choose_dir()
 				col = robot_x;
 				continue;
 			}
+			// iterating antidiagonally
 			--row;
 			++col;
 		}
@@ -120,6 +121,8 @@ void make_turn()
 	// return to the upper-left corner if faced a wall
 	if (robot_x == MAP_SIZE-1 && robot_y == MAP_SIZE-1) {
 
+		// short output
+		// show path before returning
 		print_map();
 
 		robot_x = 0;
@@ -129,6 +132,8 @@ void make_turn()
 		// count again
 		count_coins();
 
+		// short output
+		// show cleaned map after returning
 		print_map();
 
 		return;
@@ -168,7 +173,7 @@ void make_turn()
 		exit(1);
 	}
 
-
+	// Exceptional situation. Must not occure
 	if (robot_y >= MAP_SIZE || robot_x >= MAP_SIZE) {
 		cout << "Oops, crashed!\n";
 		cout << "Press Enter to exit\n";
@@ -230,11 +235,15 @@ int main(int argc, char *argv[])
 	print_map();
 	while (coins) {
 		make_turn();
+		// long output
 		//print_map();
 	}
+	// short output
+	// final path
 	print_map();
 
 	cout << "Completed!\n";
 	cout << "passes: " << passes << endl;
+	cout.operator!();
 	return 0;
 }
