@@ -12,16 +12,19 @@ struct BTreeNode {
 	bool leaf;
 
 	BTreeNode( int d )
-	{
-		n = 0;
-		min_degree = d;
-		keys = new Key[2*min_degree - 1];
-		children = new BTreeNode*[2*min_degree];
-		leaf = true;
-	}
+		: n(0),
+		  min_degree(d),
+		  keys(new Key[2*d-1]),
+		  children(new BTreeNode*[2*d]),
+		  leaf(true)
+	{ }
+
 	~BTreeNode()
 	{
 		delete[] keys;
+		if(!leaf)
+			for( int i = 0; i < n+1; ++i )
+				delete children[i];
 		delete[] children;
 	}
 };

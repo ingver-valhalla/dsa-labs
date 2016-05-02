@@ -60,6 +60,9 @@ void btree_insert_nonfull( BTreeNode * node, Key k )
 {
 	int i = node->n - 1;
 	if( node->leaf ) {
+		for( int j = 0; j < node->n; ++j )
+			if( node->keys[j] == k )
+				return;
 		for( ; i >= 0 && k < node->keys[i]; --i ) {
 			node->keys[i+1] = node->keys[i];
 		}
