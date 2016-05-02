@@ -21,20 +21,13 @@ struct Address{
 	}
 };
 
-std::vector<std::string> streets;
-std::set<Address> addresses;
-
-bool addr_eq(Address addr1, Address addr2)
-{
-	return addr1.street == addr2.street
-		   && addr1.building == addr2.building;
-}
-
 std::ostream& operator<<(std::ostream& os, Address addr)
 {
 	os << addr.street << ", " << addr.building;
 	return os;
 }
+
+std::set<Address> addresses;
 
 int hash_int1(int i, int M)
 {
@@ -57,7 +50,7 @@ int hash_int4(int i, int M)
 }
 
 typedef int (*hintf)(int, int);
-hintf hash_int = hash_int1;
+hintf hash_int = hash_int4;
 
 int hash_addr(Address addr, int M)
 {
@@ -72,9 +65,8 @@ int hash_addr(Address addr, int M)
 	return hash;
 }
 
-Address gen_addr()
+Address gen_addr(const std::vector<std::string>& streets)
 {
-	static std::set<Address> addresses;
 	Address addr;
 
 	do {
@@ -87,13 +79,53 @@ Address gen_addr()
 	return addr;
 }
 
-double hi_square(int* stats, int M, int keys)
+double chi_square(std::vector<int> stats, int M, int keys)
 {
 	double sum = 0;
 	for (int i = 0; i < M; ++i) {
 		sum += pow(stats[i] - (double)keys / M, 2.0);
 	}
 	return ((double)M / keys) * sum;
+}
+
+void test_hash_quality(const std::vector<std::string>& streets, const int table_size, const int keys)
+{
+	const int TESTS = 1000;
+	double chi2 = 0;
+	std::vector<int> stats;
+	int hit = 0;
+	double chi2_lower_bound = table_size - sqrt(table_size);
+	double chi2_upper_bound = table_size + sqrt(table_size);
+	double theor_probability = 1 - 1 / ((double)keys / table_size);
+	double frequency = 0;
+
+	for (int i = 0; i < TESTS; ++i) {
+		addresses.clear();
+		stats = std::vector<int>(table_size);
+		for (int j = 0; j < keys; ++j) {
+			Address addr = gen_addr(streets);
+			int h = hash_addr(addr, table_size);
+			if (h < 0 || h >= table_size) {
+				cout << "Invalid hash (" << h << ")\n";
+				return;
+			}
+			++stats[h];
+		}
+
+		chi2 = chi_square(stats, table_size, keys);
+		if (chi2_lower_bound <= chi2 && chi2 <= chi2_upper_bound) {
+			++hit;
+		}
+	}
+	frequency = (double)hit / TESTS;
+
+	cout << "M - M^(1/2) = " << chi2_lower_bound << endl;
+	cout << "M + M^(1/2) = " << chi2_upper_bound << endl;
+	cout << "1 - 1/c = " << theor_probability << endl;
+	cout << "frequency " << frequency << endl;
+	if (theor_probability <= frequency) {
+		cout << "hash satisfies \"chi squared\" critetria" << endl;
+	}
 }
 
 int main(int argc, char* argv[])
@@ -105,7 +137,8 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
-	const int TABLE_SIZE = 511;
+	vector<string> streets;
+	const int TABLE_SIZE = 512;
 	const int KEYS = 2000;
 	static int stats[TABLE_SIZE];
 
@@ -121,8 +154,12 @@ int main(int argc, char* argv[])
 	}
 
 	for (int i = 0; i < KEYS; ++i) {
-		Address addr = gen_addr();
+		Address addr = gen_addr(streets);
 		int h = hash_addr(addr, TABLE_SIZE);
+		if (h < 0 || h >= TABLE_SIZE) {
+			cout << "Invalid hash (" << h << ")\n";
+			return 0;
+		}
 		//cout << "hash_addr(" << addr << ") = "
 			 //<< h << endl;
 		++stats[h];
@@ -134,22 +171,20 @@ int main(int argc, char* argv[])
 	}
 
 	fdata << "stats:\n";
+	//cout << "stats:\n";
 	int min = KEYS, max = 0;
 	for (int i = 0; i < TABLE_SIZE; ++i) {
 		fdata << i << "," << stats[i] << endl;
+		//cout << stats[i] << " ";
 		if (stats[i] < min)
 			min = stats[i];
 		if (stats[i] > max)
 			max = stats[i];
 	}
-	cout << endl;
+	cout << "\n\n";
 
-	cout << "max difference = " << max - min << "\n\n";
 
-	cout << "hi^2 = " << hi_square(stats, TABLE_SIZE, KEYS) << endl;
-	cout << "M - M^(1/2) = " << (TABLE_SIZE - sqrt(TABLE_SIZE)) << endl;
-	cout << "M + M^(1/2) = " << (TABLE_SIZE + sqrt(TABLE_SIZE)) << endl;
-	cout << "1 - 1/c = " << 1 - 1 / ((double)KEYS / TABLE_SIZE) << endl;
+	test_hash_quality(streets, TABLE_SIZE, KEYS);
 	
 	system("sleep 1");
 
