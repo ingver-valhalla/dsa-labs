@@ -77,8 +77,11 @@ void make_schedule(iter begin, iter end, double init_time, double duration, int 
 	if (max_events <= 0)
 		return;
 
+	auto rest = begin + max_events;
 	// sort by times
-	std::sort(begin, begin + max_events, compare_times);
+	std::sort(begin,
+	          rest < end ? rest : end,
+	          compare_times);
 
 	std::cout << "sorted by times (" << max_events << " left):\n";
 	auto out = begin;
@@ -138,7 +141,6 @@ void make_schedule(iter begin, iter end, double init_time, double duration, int 
 	if (it == end)
 		return;
 
-	//return;
 	make_schedule(it, end, init_time + duration, duration, max_events-1);
 }
 
@@ -150,8 +152,11 @@ std::vector<Event> make_schedule(C& events, double duration)
 
 	// sort by profit (compare_profit stores max time in Event::max_time)
 	std::sort(begin(events), end(events), compare_profit);
-	int max_events = Event::max_time / duration + 1;
+	unsigned int max_events = Event::max_time / duration + 1;
+	if (max_events > events.size())
+		max_events = events.size();
 
+	std::cout << "duration = " << duration << "\n";
 	std::cout << "Event::max_time = " << Event::max_time << "\n";
 	std::cout << "max events: " << max_events << "\n";
 	std::cout << "sorted by profit:\n";
@@ -200,7 +205,7 @@ std::vector<Event> gen_data(int count)
 {
 	std::vector<Event> data;
 	while(count--) {
-		data.push_back(Event(rand()%100, (double)(rand()%10) / 2));
+		data.push_back(Event(rand()%100, (double)(rand()%1000) / 100));
 	}
 	return data;
 }
@@ -209,19 +214,23 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+	srand(time(NULL));
 	vector<Event> events;
 	if(argc == 2) {
 		events = read_file(argv[1]);
 	}
 	else if (argc == 1) {
 		//events = {
-			//Event{ 10, 2.6 },
-			//Event{ 8, 2 },
-			//Event{ 5, 5 },
-			//Event{ 7, 4.5 },
-			//Event{ 8, 2 },
-			//Event{ 7, 2.5 },
-			//Event{ 1, 1.4 }
+			//Event { 13, 81.3 },
+			//Event { 20, 88.9 },
+			//Event { 92, 58.5 },
+			//Event { 71, 19.5 },
+			//Event { 49, 10.4 },
+			//Event { 11, 63.9 },
+			//Event { 98, 43.6 },
+			//Event { 41, 99.2 },
+			//Event { 44, 42.1 },
+			//Event { 65, 17.3 }
 		//};
 		events = gen_data(10);
 	}
@@ -237,7 +246,7 @@ int main(int argc, char** argv)
 	}
 	cout << "Total = " << total << "\n\n";
 
-	auto schedule = make_schedule(events, 1.5);
+	auto schedule = make_schedule(events, rand()%200/100.0);
 
 	total = 0;
 	cout << "RESULT:\n";
@@ -246,6 +255,8 @@ int main(int argc, char** argv)
 		cout << e << endl;
 	}
 	cout << "Total profit = " << total << "\n\n";
+
+	system("sleep 1");
 
 	return 0;
 }
