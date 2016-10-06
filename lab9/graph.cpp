@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cfloat>
 #include <ctime>
+#include <fstream>
 
 using namespace std;
 
@@ -78,7 +79,8 @@ public:
 	void    EulerianGraph();
 	bool    isEulerian();
 	bool    isConnected();
-	void    Hierholzer(int v, Cont& cont);
+	bool    Hierholzer(int v, Cont& cont);
+	bool    FindEulerianCycle(Cont& answer);
 	void    PrintEulerianCycle();
 
 	void    HamiltonianGraph();
@@ -87,6 +89,7 @@ public:
 	bool    FindHamiltonianCycle(int from, CStack& answer);
 private:
 	bool    FindHamiltonianCycleRecur(int from, int to, int len, CStack& answer, bool* marks);
+	
 
 
 
@@ -612,60 +615,71 @@ void   OrWGraph::Random(double Density, double MaxWeight)
 
 
 //---------------------------------------------------------------------------
-// Generates a graph with eulerian cycle
+//---------------------------------------------------------------------------
+// Метод генерирации эйлерова графа
+// 
+int times; // для подсчета перегенераций
 void Graph::EulerianGraph()
 {
-	// iterating by rows
-	for( int i = 0; i < _Size-1; ++i ) {
-		int curDegree = 0;
-		int val;
+	times = 0;
+	do {
+		Init(DBL_MAX);
+		// проход по строкам матрицы
+		for( int i = 0; i < _Size-1; ++i ) {
+			int curDegree = 0;
+			int val;
 
-		// Count current degree
-		for( int j = 0; j < i; ++j ) {
-			if( _m[i][j] == 1 ) {
-				++curDegree;
-			}
-		}
-
-		// Generate remaining
-		for( int j = i+1; j < _Size-2; ++j ) {
-			val = rand() % 2;
-			if( val ) {
-				++curDegree;
-				_m[i][j] = _m[j][i] = val;
-			}
-		}
-
-		// Special case for two last columns
-
-		if( i != _Size-2 ) {
-			// If not generated any edges yet, then make an edge.
-			// Current degree will be odd (will be useful after)
-			if( !curDegree ) {
-				_m[i][_Size-2] = _m[_Size-2][i] = 1;
-				++curDegree;
-			}
-			// Else let the random decide
-			else if( (val = rand()%2) ) {
-				++curDegree;
-				_m[i][_Size-2] = _m[_Size-2][i] = 1;
+			// подсчет текущей степени
+			for( int j = 0; j < i; ++j ) {
+				if( _m[i][j] == 1 ) {
+					++curDegree;
+				}
 			}
 
+			// генерация оставшихся ребер
+			for( int j = i+1; j < _Size-2; ++j ) {
+				val = rand() % 2;
+				if( val ) {
+					++curDegree;
+					_m[i][j] = _m[j][i] = val;
+				}
+			}
+
+			// обработка двух последних столбцов
+
+			if( i != _Size-2 ) {
+				// Если ни одного ребра еще не было сгенеровано, добавить одно
+				// ребро. Текущая степень вершнины будет нечентной (что будет
+				// учтено позже)
+				if( !curDegree ) {
+					_m[i][_Size-2] = _m[_Size-2][i] = 1;
+					++curDegree;
+				}
+				// Иначе снова сгенерировать случайно
+				else if( (val = rand()%2) ) {
+					++curDegree;
+					_m[i][_Size-2] = _m[_Size-2][i] = 1;
+				}
+
+			}
+			// Проверка четности текущей вершины и вставка ребра при
+			// необходимости
+			if(curDegree%2 != 0) {
+				_m[i][_Size-1] = _m[_Size-1][i] = 1;
+			}
 		}
-		// Check if degree is odd on last iteration and insert necessary edge
-		if(curDegree%2 != 0) {
-			_m[i][_Size-1] = _m[_Size-1][i] = 1;
-		}
-	}
+		++times;
+	} while (!isEulerian());
+
+	//cout << "times = " << times << "\n";
 }
 //---------------------------------------------------------------------------
+// Проверка эйлеровости
 bool Graph::isEulerian()
 {
 	if(!isConnected())
 		return false;
 
-	// check eulerness
-	int oddVerteces = 0;
 	bool has_edges = false;
 	for(int i = 0; i < _Size; ++i) {
 		int degree = 0;
@@ -676,25 +690,17 @@ bool Graph::isEulerian()
 			}
 		}
 		if(degree%2 != 0) {
-			if(oddVerteces < 2) {
-				++oddVerteces;
-			}
-			else {
 				return false;
-			}
 		}
 	}
-	if(!has_edges) {
-		return false;
-	}
-	return true;
+	return has_edges;
 }
 //---------------------------------------------------------------------------
+// Проверка связности
 bool Graph::isConnected()
 {
-	// check connectivity
 	int* marks = new int[_Size]();
-	marks[0] = 1; // reachable
+	marks[0] = 1; // достижимость вершин
 
 	int i = 0, j = 0;
 	for(int v = 0; v < _Size; ++v) {
@@ -710,12 +716,12 @@ bool Graph::isConnected()
 
 		for(j = 0; j < _Size; ++j) {
 			if(_m[i][j] == 1 && marks[j] == 0) {
-				marks[j] = 1; // mark all neighbors of i as reachable
+				marks[j] = 1; // пометить всех соседей i как достижимые
 			}
 		}
-		marks[i] = 2; // vertex i is processed
+		marks[i] = 2; // вершина i обработана
 	}
-	// check if there are unprocessed verteces
+	// проверить, не осталось ли необработанных вершин
 	for(i = 0; i < _Size; ++i) {
 		if(marks[i] == 0) {
 			delete[] marks;
@@ -727,26 +733,26 @@ bool Graph::isConnected()
 	return true;
 }
 //---------------------------------------------------------------------------
+// Генерация гамильтонова графа
 void Graph::HamiltonianGraph()
 {
-	// Dirac's condition
+	// Условик Дирака
 	int half = (int)(_Size / 2.0 + 0.5);
 	//cout << "Degree must be >= " << half << endl;
 	int i, j;
 	int curDegree;
 	int val;
 
-	// Iterate by rows
+	// Проход по строкам
 	for( i = 0; i < _Size; ++i ) {
 		curDegree = 0;
-		// Count current degree
+		// Подсчет текущей степени
 		for( j = 0; j < i && (_Size-j-1 > half-curDegree); ++j ) {
 			if( _m[i][j] != DBL_MAX ) {
 				++curDegree;
 			}
 		}
-		// generate edges, excluding last column, and checking if Dirac's
-		// condition can be satisfied
+		// генерация ребер и проверка на возможность соблюдения условия Дирака 
 		for( ; j < _Size && (_Size-j-2 > half-curDegree); ++j ) {
 			if( i == j ) {
 				continue;
@@ -756,7 +762,7 @@ void Graph::HamiltonianGraph()
 				_m[i][j] = _m[j][i] = val;
 			}
 		}
-		// Insert edges to satisfy Dirac's condition
+		// Вставка ребер для последних столбцов для соблюдения условия Дирака
 		for( ; j < _Size-1; ++j ) {
 			if(i == j)
 				continue;
@@ -765,6 +771,7 @@ void Graph::HamiltonianGraph()
 	}
 }
 //---------------------------------------------------------------------------
+// Проверка на гамильтоновость
 bool Graph::isHamiltonian()
 {
 	double degree = 0;
@@ -786,41 +793,57 @@ bool Graph::isHamiltonian()
 	return true;
 }
 //---------------------------------------------------------------------------
+// Вывод эйлерова цикла
 void Graph::PrintEulerianCycle()
 {
-	if(!isEulerian()) {
-		cout << "Graph is not eulerian\n";
+	CQueue eulerian_cycle;
+	if(!FindEulerianCycle(eulerian_cycle)) {
+		cout << "Can't find eulerian cycle\n";
 		return;
 	}
 	
-	CQueue answer = CQueue();
-	Graph g(*this);
-
-	answer.Push(0);
-	g.Hierholzer(0, answer);
-	for(int i = 0; i < g._Size; ++i) {
-		for(int j = 0; j < g._Size; ++j) {
-			if(g._m[i][j] == 1) {
-				g.Print();
-				throw "Remained edges";
-			}
-		}
-	}
-
 	// printing
 	cout << "Eulerian cycle:\n";
-	int v;
-	while((v = answer.Pop()) != -1) {
-		cout << v << " ";
-	}
+	eulerian_cycle.Print();
 	cout << endl;
 	cout << "--------------" << endl;
 }
 //---------------------------------------------------------------------------
-void Graph::Hierholzer(int v, Cont& answer)
+// Поиск эйлерова цикла
+bool Graph::FindEulerianCycle(Cont& answer)
+{
+	if(!isEulerian()) {
+		cout << "Graph is not eulerian\n";
+		return false;
+	}
+
+	Graph g(*this);
+
+	answer.Push(0);
+	if (!g.Hierholzer(0, answer))
+		return false;
+
+	for(int i = 0; i < g._Size; ++i) {
+		for(int j = 0; j < g._Size; ++j) {
+			if(g._m[i][j] == 1) {
+				g.Print();
+				cout << "Remained edges\n";
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+//---------------------------------------------------------------------------
+// Алгоритм Хиерхолцера
+// (эйлеров цикл помещается в контейнер answer, за исключением начальной
+// вершины)
+bool Graph::Hierholzer(int v, Cont& answer)
 {
 	if(v < 0 || v > _Size) {
-		throw "invalid vertex";
+		cout << "invalid vertex";
+		return false;
 	}
 
 	CQueue cycles = CQueue();
@@ -839,10 +862,14 @@ void Graph::Hierholzer(int v, Cont& answer)
 
 	while((p = cycles.Pop()) != -1) {
 		answer.Push(p);
-		Hierholzer(p, answer);
+		if (!Hierholzer(p, answer))
+			return false;
 	}
+
+	return true;
 }
 //---------------------------------------------------------------------------
+// Вывод гамильтонова цикла
 void Graph::PrintHamiltonianCycle()
 {
 	if(!isHamiltonian()) {
@@ -866,23 +893,18 @@ void Graph::PrintHamiltonianCycle()
 	cout << "--------------" << endl;
 }
 //---------------------------------------------------------------------------
+// Поиск гамильтонова цикла
 bool Graph::FindHamiltonianCycle(int from, CStack& answer)
 {
 	if(from < 0 || from > _Size) {
-		throw "invalid vertex";
+		cout << "FindHamiltonianCycle: Invalid vertex\n";
+		return false;
 	}
 
-	bool marks[_Size] = {false};
-	//cout << "FindHamiltonianCycle from " << from << ":\n";
-	//cout << "answer: ";
-	//answer.Print();
-	//cout << endl;
-
-	//cout << "marks: ";
-	//for(int i = 0; i < _Size; ++i) {
-		//cout << marks[i] << " ";
-	//}
-	//cout << endl;
+	bool *marks = new bool[_Size];
+	for (int i = 0; i < _Size; ++i) {
+		marks[i] = false;
+	}
 	
 	answer.Push(from);
 	marks[from] = true;
@@ -897,23 +919,19 @@ bool Graph::FindHamiltonianCycle(int from, CStack& answer)
 	}
 
 	answer.Pop();
+
+	delete [] marks;
+
 	return false;
 }
 //---------------------------------------------------------------------------
+// Рекурсивная часть процедуры поиска гамильтонова цикла
 bool Graph::FindHamiltonianCycleRecur(int from, int to, int len, CStack& answer, bool* marks)
 {
 	if(from < 0 || from > _Size || to < 0 || to > _Size) {
-		throw "invalid vertex";
+		cout <<  "FindHamiltonianCycleRecur: Invalid vertex\n";
+		return false;
 	}
-
-	//cout << "FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...\n";
-	//cout << "answer: ";
-	//answer.Print();
-	//cout << "\nmarks: ";
-	//for(int i = 0; i < _Size; ++i) {
-		//cout << marks[i] << " ";
-	//}
-	//cout << endl;
 
 	answer.Push(from);
 	marks[from] = true;
@@ -921,21 +939,19 @@ bool Graph::FindHamiltonianCycleRecur(int from, int to, int len, CStack& answer,
 		if(_m[from][v] == 1 && !marks[v]
 		   && FindHamiltonianCycleRecur(v, to, len-1, answer, marks))
 		{
-			//cout << "<<<+FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...\n";
 			return true;
 		}
 	}
 	if(len == 1 && _m[from][to] == 1) {
-		//cout << "<<<+FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...(last)\n";
 		return true;
 	}
 	answer.Pop();
 	marks[from] = false;
-	//cout << "<<<-FindHamiltonianCycleRecur(from=" << from << ", to=" << to << ", len=" << len << "...(last)\n";
 	return false;
 
 }
 //---------------------------------------------------------------------------
+// Метод для вывода содержимого контейнера
 void Cont::Print()
 {
 	Item *p = _Head;
@@ -945,44 +961,186 @@ void Cont::Print()
 	}
 }
 //---------------------------------------------------------------------------
+// Тест времени работы поиска эйлерова цикла
+void test_eulerian_time(fstream& f)
+{
+	cout << "Testing eulerian cycle search time...\n";
+	f << "Eulerian cycle\n";
+
+	int minEdges = 1e8, maxEdges = 0;
+	const int cgraphs = 5000,
+	      cverteces = 100,
+	      maxEdgesPossible = cverteces * (cverteces - 1);
+
+	struct {
+		int count;
+		double time;
+	} stats[maxEdgesPossible];
+
+	for (int i = 0; i < maxEdgesPossible; ++i) {
+		stats[i] = { 0, 0 };
+	}
+
+	for (int i = 0; i < cgraphs; ++i) {
+		Graph G(cverteces);
+		G.EulerianGraph();
+		clock_t start = 0;
+		clock_t end = 0;
+		int edges = G.EdgeCount();
+		CQueue q;
+		++stats[edges].count;
+
+
+		start = clock();
+		G.FindEulerianCycle(q);
+		end = clock();
+		stats[edges].time += 1000.0 * (end - start) / CLOCKS_PER_SEC;
+		//cout << "time for " << edges << " edges: " << stats[edges].time;
+		//cin.get();
+
+		if (minEdges > edges)
+			minEdges = edges;
+		if (maxEdges < edges)
+			maxEdges = edges;
+		//cout << G.EdgeCount() << endl;
+	}
+
+	cout << "graphs generated: " << cgraphs << endl;
+	cout << "verteces: " << cverteces << endl;
+	cout << "max edges possible: " << cverteces * (cverteces - 1) << endl;
+	cout << "minEdges = " << minEdges << endl;
+	cout << "maxEdges = " << maxEdges << endl;
+	cout << "diff = " << maxEdges - minEdges << endl;
+	cout << "stats:\n";
+
+	for (int i = 0, j = 0; i < maxEdgesPossible; ++i) {
+		if (stats[i].count > 10) {
+			stats[i].time = stats[i].time / stats[i].count;
+			cout << "[" << i << ", " << stats[i].count << ", " << stats[i].time << "] ";
+			f << "(" << i << ";" << stats[i].time << ")\n";
+			f.flush();
+			++j;
+		}
+		if (j == 5) {
+			cout << endl;
+			j = 0;
+		}
+	}
+	cout << endl;
+}
+//---------------------------------------------------------------------------
+// Тест времени поиска гамильтонова цикла
+void test_hamiltonian_time(fstream& f)
+{
+	const int NVERTS = 10;
+	const int NTESTS = 100;
+
+	clock_t test_start = 0;
+	clock_t test_stop = 0;
+	double total = 0;
+
+	total = 0;
+	cout << "Testing hamiltonian cycle search time...\n";
+	f << "Hamiltonian cycle\n";
+	for (int v = 50; v <= 1000; v += 10) {
+		//cout << v << "verteces:\n";
+		//double min = DBL_MAX;
+		//double max = 0;
+		Graph g(v);
+		for (int i = 0; i < NTESTS; ++i) {
+			CStack stack;
+
+			g.HamiltonianGraph();
+
+			test_start = clock();
+			if (!g.FindHamiltonianCycle(0, stack)) {
+				cout << "Failed to find Hamiltonian cycle\n";
+				return;
+			}
+
+			test_stop = clock();
+			double diff = 1000.0 * (test_stop - test_start) / CLOCKS_PER_SEC; 
+			total += diff;
+
+			//if (min > diff)
+				//min = diff;
+			//if (max < diff)
+				//max = diff;
+			//cout << "diff: " << diff << endl;
+		}
+
+		//cout << "max diff: " << max - min << endl;
+		
+		double average = total / NTESTS;
+		cout << "(" << v << ";" << average << ")\n";
+		f << "(" << v << ";" << average << ")\n";
+		//cin.get();
+	}
+}
+//---------------------------------------------------------------------------
+// Тест времени работы алгоритмов
+void test_time()
+{
+	fstream f("out.txt", ios::out);
+	if(!f) {
+		cerr << "Can't open file out.txt\n";
+		return;
+	}
+	cout << "test_time:\n";
+
+	test_eulerian_time(f);
+	test_hamiltonian_time(f);
+}
 
 int main(int argc, char* argv[])
 {
-	//srand(time(NULL));
+	srand(time(NULL));
 
-	//for(int i = 0; i < 100; ++i) {
-		//Graph E(6);
-		//E.EulerianGraph();
-		//cout << "E :" << endl;
-		//E.Print();
-		//try {
-			//E.PrintEulerianCycle();
-		//} catch(const char *e) {
-			//cout << e << endl;
-		//}
-		//getchar();
+	//int max = 0;
+	//for (int i = 0; i < 10; ++i) {
+		//Graph G(7);
+		//G.EulerianGraph();
+		//G.Print();
+		//if (times > max)
+			//max = times;
+		//G.PrintEulerianCycle();
+		//cin.get();
 	//}
 
-	while(1) {
-		Graph H(8);
-		H.HamiltonianGraph();
-		cout << "H :" << endl;
-		H.Print();
-		if(!H.isHamiltonian()) {
-			cout << "NOT HAMILTONIAN\n";
-			exit(1);
-		}
-		else
-			cout << "Hamiltonian\n\n";
-		try {
-		H.PrintHamiltonianCycle();
-		}
-		catch(const char *e) {
-			cout << e << endl;
-		}
-		cout << "\n";
-		getchar();
+	//cout << "max = " << max << endl;
+
+	
+	double gen = 0;
+	double srch = 0;
+	double elapsed = 0;
+	clock_t test_start = 0;
+	clock_t test_stop = 0;
+	for (int i = 0; i < 10; ++i) {
+		Graph G(10000);
+		test_start = clock();
+		G.HamiltonianGraph();
+		test_stop = clock();
+		elapsed = 1000.0*(test_stop - test_start) / CLOCKS_PER_SEC;
+		cout << "gen elapsed " << elapsed  << "\n";
+		gen += elapsed;
+		//G.Print();
+		//G.PrintHamiltonianCycle();
+
+		CStack stack;
+		test_start = clock();
+		G.FindHamiltonianCycle(0,stack);
+		test_stop = clock();
+		//cin.get();
+
+		elapsed = 1000.0*(test_stop - test_start) / CLOCKS_PER_SEC;
+		cout << "srch elapsed " << elapsed  << "\n";
+		srch += elapsed;
 	}
+	cout << "gen: " << (gen / 10) << endl;
+	cout << "srch: " << (srch / 10) << endl;
+	
+	//cin.get();
+	//test_time();
 
 	return 0;
 }
