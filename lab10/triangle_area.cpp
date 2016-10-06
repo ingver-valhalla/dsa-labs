@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
 
 std::ostream& operator<<(std::ostream& os, const std::vector<double>& cont)
 {
@@ -37,16 +38,18 @@ std::vector<double> get_biggest_area_segments(std::vector<double>& segments)
 	for (int i = 0; i < 3; ++i)
 		temp[i] = segments[i];
 	
-	std::cout << "biggest 3 segments:\n";
-	std::cout << temp << "\n";
+	//std::cout << "biggest 3 segments:\n";
+	//std::cout << temp << "\n";
 
 	auto it = segments.begin() + 3;
-	do {
+
+	while (it != segments.end()) {
 		// check triangle inequality:
 		// a < b + c
 		if (temp[0] < temp[1] + temp[2]) {
-			if (biggest_area < s(temp[0], temp[1], temp[2])) {
-				biggest_area = s(temp[0], temp[1], temp[2]);
+			double area = s(temp[0], temp[1], temp[2]);
+			if (biggest_area < area) {
+				biggest_area = area;
 				result = temp;
 			}
 		}
@@ -54,7 +57,7 @@ std::vector<double> get_biggest_area_segments(std::vector<double>& segments)
 		temp[1] = temp[2];
 		temp[2] = *it;
 		++it;
-	} while (it != segments.end());
+	} //while (it != segments.end());
 
 	return result;
 }
@@ -63,12 +66,12 @@ std::vector<double> stupid_method(std::vector<double>& segments)
 {
 	if (segments.size() < 3)
 		return std::vector<double>();
-	std::cout << "Stupid method:\n";
+	//std::cout << "Stupid method:\n";
 	std::sort(segments.begin(), segments.end(), std::greater<double>());
 
 	double max_area = 0;
 	std::vector<double> result;
-	std::vector<double> tri;
+	std::vector<double> triplet;
 	double a, b, c;
 
 	for (auto it1 = segments.begin(); it1 < segments.end()-2; ++it1) {
@@ -77,27 +80,27 @@ std::vector<double> stupid_method(std::vector<double>& segments)
 			b = *it2;
 			for (auto it3 = it2 + 1; it3 < segments.end(); ++it3) {
 				c = *it3;
-				tri = {a, b, c};
+				triplet = {a, b, c};
 
-				std::cout << tri;
+				//std::cout << triplet;
 
 				if (a >= b + c) {
-					std::cout << " !!! denied\n";
+					//std::cout << " !!! denied\n";
 					continue;
 				}
 
 				double area = s(a,b,c);
-				std::cout << " area = " << area << "\n";
+				//std::cout << " area = " << area << "\n";
 
 				if (max_area < area) {
 					max_area = area;
-					result = tri;
+					result = triplet;
 				}
 			}
 		}
 	}
 
-	std::cout << "max_area = " << max_area << "\n";
+	//std::cout << "max_area = " << max_area << "\n";
 
 	return result;
 }
@@ -112,35 +115,40 @@ int main()
 	//};
 
 	while(1) {
-		std::cout << "********************************************************\n";
+		cout << "********************************************************\n";
 		vector<double> vec(10);
 		for (int i = 0; i < 10; ++i)
 			vec[i] = rand()%1000/100.0;
 
-		cout << "vec = " << vec << "\n";
+		cout << "segments generated:\n";
+		cout << vec << "\n";
 
 		auto stupid = stupid_method(vec);
-		cout << "stupid = " << stupid << " (" << s(stupid[0], stupid[1], stupid[2]) << ")\n";
+		cout << "solution found with naive method:\n";
+		cout << stupid << " (s = " << s(stupid[0], stupid[1], stupid[2]) << ")\n";
+
+
+		bool success = false;
+		std::vector<double> temp(3);
+		for (int i = 0; i < 3; ++i)
+			temp[i] = vec[i];
+		if (temp[0] < temp[1] + temp[2])
+			success = true;
+
+		
+		std::cout << "biggest 3 segments:\n";
+		std::cout << temp << " (s = " << s(temp[0], temp[1], temp[2]) << ")\n";
+
 		auto result = get_biggest_area_segments(vec);
 		if (result.size() > 0)
-			cout << "result = " << result << " (" << s(result[0], result[1], result[2]) << ")\n";
+			cout << "result = " << result << " (s = " << s(result[0], result[1], result[2]) << ")\n";
 		else
 			cout << "result is empty\n";
 
-		bool success = stupid == result;
-		cout << "stupid == result? -> " << success << endl;
-		if (!success) {
-			fstream f("err.txt", ios::out);
-			if (!f) {
-				cerr << "failed to open err.txt\n";
-				return 1;
-			}
-			f << vec;
-			f.close();
-			std::cout << "AAAAAAaaaaaaaaaAAAAAAA\n";
+		if (temp != result && success)
 			break;
-		}
-
+		
+		//cin.get();
 	}
 
 	return 0;
