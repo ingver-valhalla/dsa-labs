@@ -611,6 +611,7 @@ void  Graph::PrintDiameter()
 
 int main(int argc, char* argv[])
 {
+	srand(time(NULL));
 	cout << "MAXDOUBLE = " << MAXDOUBLE << endl;
 	OrGraph A(5);
 	A.Random(0.5, 1);
